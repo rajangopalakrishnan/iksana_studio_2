@@ -430,7 +430,7 @@ export default function App() {
           {tab==="projects"      && <Projects projects={projects} tasks={tasks} engineers={engineers} setProjects={v=>persist(KEYS.projects,setProjects,v)} showToast={showToast} role={role} />}
           {tab==="allocation"    && <Allocation engineers={engineers} tasks={tasks} projects={projects} />}
           {tab==="attendance"    && <Attendance engineers={engineers} attendance={attendance} leaves={leaves} setAttendance={v=>persist(KEYS.attendance,setAttendance,v)} setLeaves={v=>persist(KEYS.leaves,setLeaves,v)} showToast={showToast} role={role} currentUser={currentUser} emailCfg={emailCfg} onSendEmail={handleSendEmail} />}
-          {tab==="productivity"  && <Productivity productivity={productivity} tasks={tasks} engineers={engineers} setProductivity={v=>persist(KEYS.productivity,setProductivity,v)} showToast={showToast} role={role} />}
+          {tab==="productivity"  && <Productivity productivity={productivity} tasks={tasks} engineers={engineers} projects={projects} setProductivity={v=>persist(KEYS.productivity,setProductivity,v)} showToast={showToast} role={role} />}
           {tab==="reports"       && <Reports engineers={engineers} projects={projects} tasks={tasks} attendance={attendance} leaves={leaves} />}
           {tab==="notifications" && <Notifications tasks={tasks} projects={projects} engineers={engineers} leaves={leaves} dismissed={dismissed} setDismissed={v=>persist(KEYS.dismissed,setDismissed,v)} setTab={setTab} emailCfg={emailCfg} onSendEmail={handleSendEmail} />}
           {tab==="export"        && <Export tasks={tasks} projects={projects} engineers={engineers} attendance={attendance} leaves={leaves} />}
@@ -1317,7 +1317,7 @@ function Allocation({ engineers, tasks, projects }) {
 }
 
 // ─── Productivity ─────────────────────────────────────────────────────────────
-function Productivity({ productivity, tasks, engineers, setProductivity, showToast }) {
+function Productivity({ productivity, tasks, engineers, projects, setProductivity, showToast }) {
   const [editing, setEditing] = useState(null);
 
   const getEngineerProductivity = (eng) => {
@@ -1416,15 +1416,22 @@ function Productivity({ productivity, tasks, engineers, setProductivity, showToa
                 return acc;
               }, {});
               return Object.entries(costMap).map(([pid, cost]) => {
-                const p = { id: pid, name: pid, budget: 0, region: "—" };
+                const proj = projects.find(p => p.id === pid) || { id: pid, name: "Unknown Project", budget: 0, region: "—" };
+                const remaining = proj.budget - cost;
+                const burn = proj.budget > 0 ? Math.round((cost / proj.budget) * 100) : 0;
                 return (
                   <tr key={pid}>
-                    <td style={{ fontWeight: 500 }}>{pid}</td>
-                    <td>—</td>
-                    <td style={{ fontFamily: "DM Mono", fontSize: 12 }}>—</td>
+                    <td style={{ fontWeight: 500 }}>{proj.name}</td>
+                    <td><span className="tag" style={{ background: "#1e2133", color: "#94a3b8" }}>{proj.region}</span></td>
+                    <td style={{ fontFamily: "DM Mono", fontSize: 12 }}>{fmt(proj.budget)}</td>
                     <td style={{ fontFamily: "DM Mono", fontSize: 12 }}>{fmt(cost)}</td>
-                    <td>—</td>
-                    <td>—</td>
+                    <td style={{ fontFamily: "DM Mono", fontSize: 12, color: remaining < 0 ? "#ef4444" : "#94a3b8" }}>{fmt(remaining)}</td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="progress-bar" style={{ flex: 1, height: 4 }}><div className="progress-fill" style={{ width: `${Math.min(burn, 100)}%`, background: burn > 90 ? "#ef4444" : burn > 70 ? "#f59e0b" : "#10b981" }} /></div>
+                        <span style={{ fontSize: 10, color: burn > 90 ? "#ef4444" : "#64748b" }}>{burn}%</span>
+                      </div>
+                    </td>
                   </tr>
                 );
               });
