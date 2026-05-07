@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "./supabase";
+import { supabase, uploadFile, getFileUrl } from "./supabase";
 
 // ─── Persistent Storage Helpers ────────────────────────────────────────────
 // ─── Auth & Email Config Keys ─────────────────────────────────────────────────
@@ -80,8 +80,8 @@ const can = (role, action) => {
 };
 
 const TABS_FOR_ROLE = {
-  admin:    ["dashboard","tasks","engineers","projects","allocation","attendance","productivity","reports","notifications","export","settings"],
-  manager:  ["dashboard","tasks","projects","allocation","attendance","reports","notifications","export"],
+  admin:    ["dashboard","tasks","engineers","projects","allocation","attendance","productivity","reports","notifications","export","import","settings"],
+  manager:  ["dashboard","tasks","projects","allocation","attendance","reports","notifications","export","import"],
   operator: ["dashboard","tasks","attendance"],
 };
 
@@ -374,6 +374,7 @@ export default function App() {
     { id:"reports",       icon:"◳", label:"Reports" },
     { id:"notifications", icon:"◐", label:"Alerts",  badge:criticalCount },
     { id:"export",        icon:"◧", label:"Export" },
+    { id:"import",        icon:"⬩", label:"Import" },
     { id:"settings",      icon:"⚙", label:"Settings" },
   ].filter(item => allowedTabs.includes(item.id));
 
@@ -456,6 +457,7 @@ export default function App() {
           {tab==="reports"       && <Reports engineers={engineers} projects={projects} tasks={tasks} attendance={attendance} leaves={leaves} />}
           {tab==="notifications" && <Notifications tasks={tasks} projects={projects} engineers={engineers} leaves={leaves} dismissed={dismissed} setDismissed={v=>persist(KEYS.dismissed,setDismissed,v)} setTab={setTab} emailCfg={emailCfg} onSendEmail={handleSendEmail} />}
           {tab==="export"        && <Export tasks={tasks} projects={projects} engineers={engineers} attendance={attendance} leaves={leaves} />}
+          {tab==="import"        && <Import engineers={engineers} projects={projects} tasks={tasks} setTasks={v=>persist(KEYS.tasks,setTasks,v)} showToast={showToast} />}
           {tab==="settings"      && <Settings users={users} setUsers={v=>persist(KEYS.users,setUsers,v)} emailCfg={emailCfg} setEmailCfg={v=>persist(KEYS.emailCfg,setEmailCfg,v)} auditLog={auditLog} showToast={showToast} currentUser={currentUser} engineers={engineers} addAudit={addAudit} onSendEmail={handleSendEmail} />}
         </div>
       </div>
@@ -836,22 +838,32 @@ function Tasks({ tasks, engineers, projects, setTasks, showToast, role, currentU
     setLogHours(null);
   };
 
-  const handleAttach = (taskId, files) => {
-    const newFiles = Array.from(files).map(f => ({ name:f.name, size:f.size, type:f.type, addedAt:new Date().toISOString().slice(0,10) }));
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, attachments:[...(t.attachments||[]),...newFiles] } : t));
-    showToast(`${newFiles.length} file(s) attached`);
+  const handleAttach = async (taskId, files) => {
+    showToast("Uploading...");
+    try {
+      const results = await Promise.all(Array.from(files).map(async f => {
+        const uploaded = await uploadFile(f);
+        return { ...uploaded, type: f.type, size: f.size, addedAt: new Date().toISOString().slice(0, 10) };
+      }));
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, attachments: [...(t.attachments || []), ...results] } : t));
+      showToast(`${results.length} file(s) attached`);
+    } catch (e) {
+      console.error(e);
+      showToast("Upload failed - check Supabase bucket", "error");
+    }
   };
 
   const removeAttachment = (taskId, idx) => {
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, attachments: t.attachments.filter((_,i)=>i!==idx) } : t));
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, attachments: t.attachments.filter((_, i) => i !== idx) } : t));
   };
 
-  const FILE_ICON = (type) => {
-    if (type.includes("pdf")) return "📄";
-    if (type.includes("sheet") || type.includes("excel") || type.includes("csv") || type.includes("xlsx")) return "📊";
-    if (type.includes("dwg") || type.includes("autocad") || type.includes("dxf")) return "📐";
-    if (type.includes("image")) return "🖼";
-    if (type.includes("zip")) return "🗜";
+  const FILE_ICON = (type, name = "") => {
+    const ext = name.split('.').pop().toLowerCase();
+    if (type.includes("pdf") || ext === "pdf") return "📄";
+    if (type.includes("sheet") || type.includes("excel") || type.includes("csv") || ["xlsx", "xls", "csv"].includes(ext)) return "📊";
+    if (type.includes("dwg") || type.includes("autocad") || type.includes("dxf") || ["dwg", "dxf"].includes(ext)) return "📐";
+    if (type.includes("image") || ["png", "jpg", "jpeg", "svg"].includes(ext)) return "🖼";
+    if (type.includes("zip") || ext === "zip") return "🗜";
     return "📎";
   };
 
@@ -916,10 +928,12 @@ function Tasks({ tasks, engineers, projects, setTasks, showToast, role, currentU
                     {attachments.length > 0 && (
                       <div style={{ marginTop:4, display:"flex", flexDirection:"column", gap:2 }}>
                         {attachments.slice(0,2).map((f,i) => (
-                          <div key={i} className="file-chip">
-                            <span>{FILE_ICON(f.type)}</span>
-                            <span style={{ maxWidth:70, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{f.name}</span>
-                            <span style={{ cursor:"pointer", color:"#ef4444", marginLeft:2 }} onClick={() => removeAttachment(t.id,i)}>✕</span>
+                          <div key={i} className="file-chip" style={{ justifyContent:"space-between" }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:4, overflow:"hidden" }}>
+                              <span>{FILE_ICON(f.type, f.name)}</span>
+                              <a href={f.path ? getFileUrl(f.path) : "#"} target="_blank" rel="noreferrer" style={{ color:"inherit", textDecoration:"none", maxWidth:60, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }} title={f.name}>{f.name}</a>
+                            </div>
+                            <span style={{ cursor:"pointer", color:"#ef4444", fontSize:10 }} onClick={() => removeAttachment(t.id,i)}>✕</span>
                           </div>
                         ))}
                         {attachments.length > 2 && <div style={{ fontSize:10, color:"#4a5568" }}>+{attachments.length-2} more</div>}
@@ -2807,6 +2821,121 @@ function UserForm({ user, engineers, onSave, onClose }) {
         <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
       </div>
     </>
+  );
+}
+
+function Import({ engineers, projects, tasks, setTasks, showToast }) {
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const downloadTemplate = async () => {
+    const data = [
+      ["Title", "Project ID", "Discipline", "Priority", "Estimated Hours", "Due Date (YYYY-MM-DD)", "Assignee Email (Optional)"],
+      ["Sample Task 1", projects[0]?.id || "proj-1", "BIM", "medium", 12, "2025-12-31", engineers[0]?.email || ""],
+      ["Sample Task 2", projects[0]?.id || "proj-1", "Architecture", "high", 8, "2025-12-31", ""],
+    ];
+    await xlsxDownload([{ name: "Task Template", data, colWidths: [30, 15, 15, 10, 15, 20, 25] }], "iksana-task-template.xlsx");
+  };
+
+  const handleFileChange = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    setLoading(true);
+    try {
+      const XLSX = await loadXLSX();
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        
+        // Parse rows (skip header)
+        const rows = data.slice(1).filter(r => r[0]).map(r => {
+          const eng = engineers.find(e => e.email === r[6]);
+          return {
+            id: "t" + uid(),
+            title: r[0],
+            projectId: r[1],
+            discipline: r[2] || "BIM",
+            priority: (r[3] || "medium").toLowerCase(),
+            estimatedHours: Number(r[4]) || 0,
+            loggedHours: 0,
+            dueDate: r[5],
+            assignee: eng ? eng.id : "",
+            status: "not-started",
+            attachments: [],
+            createdAt: new Date().toISOString().slice(0, 10)
+          };
+        });
+        setPreview(rows);
+      };
+      reader.readAsBinaryString(f);
+      setFile(f);
+    } catch (e) {
+      console.error(e);
+      showToast("Error parsing file", "error");
+    }
+    setLoading(false);
+  };
+
+  const commitImport = () => {
+    setTasks([...tasks, ...preview]);
+    showToast(`${preview.length} tasks imported successfully`);
+    setPreview([]);
+    setFile(null);
+  };
+
+  return (
+    <div>
+      <PageHeader title="Import Tasks" sub="Bulk create tasks from Excel" />
+      
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:24 }}>
+        <div className="card">
+          <div style={{ fontSize:15, fontWeight:600, marginBottom:10 }}>1. Get Template</div>
+          <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>Download the standard Excel template to ensure your data is formatted correctly.</p>
+          <button className="btn btn-ghost" onClick={downloadTemplate}>⊞ Download Template</button>
+        </div>
+        
+        <div className="card">
+          <div style={{ fontSize:15, fontWeight:600, marginBottom:10 }}>2. Upload File</div>
+          <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>Upload your filled Excel template or a CSV file with the same columns.</p>
+          <label className="btn btn-primary" style={{ cursor:"pointer" }}>
+            {file ? `✓ ${file.name}` : "📁 Choose File"}
+            <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} style={{ display:"none" }} />
+          </label>
+        </div>
+      </div>
+
+      {preview.length > 0 && (
+        <div className="card">
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+            <div style={{ fontSize:15, fontWeight:600 }}>Preview: {preview.length} Tasks Found</div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button className="btn btn-primary" onClick={commitImport}>Import All Tasks</button>
+              <button className="btn btn-ghost" onClick={() => { setPreview([]); setFile(null); }}>Cancel</button>
+            </div>
+          </div>
+          <table style={{ fontSize:12 }}>
+            <thead><tr><th>Title</th><th>Project</th><th>Discipline</th><th>Assignee</th><th>Est. Hrs</th><th>Due</th></tr></thead>
+            <tbody>
+              {preview.map((t, i) => (
+                <tr key={i}>
+                  <td>{t.title}</td>
+                  <td>{t.projectId}</td>
+                  <td>{t.discipline}</td>
+                  <td>{engineers.find(e => e.id === t.assignee)?.name || "—"}</td>
+                  <td>{t.estimatedHours}h</td>
+                  <td>{t.dueDate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 
