@@ -33,14 +33,14 @@ async function hashPassword(password) {
 // ─── Default Users (passwords will be hashed on first load) ──────────────────
 // Plaintext passwords shown here — on first save they are hashed and originals dropped
 const SEED_USERS_PLAIN = [
-  { id:"u1", name:"Arun Kumar",   email:"ag@iksana.tech",     role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
-  { id:"u2", name:"Priya Nair",   email:"priya@iksana.tech",  role:"manager",  engineerId:"e2", password:"Iksana@2025", mustChange:true  },
-  { id:"u3", name:"Rahul Sharma", email:"rahul@iksana.tech",  role:"operator", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
-  { id:"u4", name:"Divya Menon",  email:"divya@iksana.tech",  role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:true  },
-  { id:"u5", name:"Kiran Reddy",  email:"kiran@iksana.tech",  role:"operator", engineerId:"e5", password:"Iksana@2025", mustChange:true  },
-  { id:"u6", name:"Ananya Singh", email:"ananya@iksana.tech", role:"manager",  engineerId:"e6", password:"Iksana@2025", mustChange:true  },
-  { id:"u7", name:"Vijay Thomas", email:"vijay@iksana.tech",  role:"operator", engineerId:"e7", password:"Iksana@2025", mustChange:true  },
-  { id:"u8", name:"Meera Pillai", email:"meera@iksana.tech",  role:"operator", engineerId:"e8", password:"Iksana@2025", mustChange:true  },
+  { id:"u1", name:"Arun Kumar",   email:"arun@iksana.in",     role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
+  { id:"u2", name:"Priya Nair",   email:"priya@iksana.in",  role:"manager",  engineerId:"e2", password:"Iksana@2025", mustChange:true  },
+  { id:"u3", name:"Rahul Sharma", email:"rahul@iksana.in",  role:"operator", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
+  { id:"u4", name:"Divya Menon",  email:"divya@iksana.in",  role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:true  },
+  { id:"u5", name:"Kiran Reddy",  email:"kiran@iksana.in",  role:"operator", engineerId:"e5", password:"Iksana@2025", mustChange:true  },
+  { id:"u6", name:"Ananya Singh", email:"ananya@iksana.in", role:"manager",  engineerId:"e6", password:"Iksana@2025", mustChange:true  },
+  { id:"u7", name:"Vijay Thomas", email:"vijay@iksana.in",  role:"operator", engineerId:"e7", password:"Iksana@2025", mustChange:true  },
+  { id:"u8", name:"Meera Pillai", email:"meera@iksana.in",  role:"operator", engineerId:"e8", password:"Iksana@2025", mustChange:true  },
 ];
 
 async function initUsers(stored) {
@@ -166,14 +166,14 @@ async function save(key, val) {
 
 // ─── Seed Data ──────────────────────────────────────────────────────────────
 const SEED_ENGINEERS = [
-  { id: "e1", name: "Arun Kumar",   email: "ag@iksana.tech",     role: "BIM Manager",       location: "office", rate: 850, active: true },
-  { id: "e2", name: "Priya Nair",   email: "priya@iksana.tech",  role: "Senior Architect",  location: "office", rate: 750, active: true },
-  { id: "e3", name: "Rahul Sharma", email: "rahul@iksana.tech",  role: "BIM Coordinator",   location: "remote", rate: 650, active: true },
-  { id: "e4", name: "Divya Menon",  email: "divya@iksana.tech",  role: "Interior Designer", location: "remote", rate: 600, active: true },
-  { id: "e5", name: "Kiran Reddy",  email: "kiran@iksana.tech",  role: "Revit Modeller",    location: "office", rate: 500, active: true },
-  { id: "e6", name: "Ananya Singh", email: "ananya@iksana.tech", role: "QS Estimator",      location: "remote", rate: 580, active: true },
-  { id: "e7", name: "Vijay Thomas", email: "vijay@iksana.tech",  role: "Revit Modeller",    location: "office", rate: 500, active: true },
-  { id: "e8", name: "Meera Pillai", email: "meera@iksana.tech",  role: "Drafting Engineer", location: "remote", rate: 450, active: true },
+  { id: "e1", name: "Arun Kumar",   email: "arun@iksana.in",     role: "BIM Manager",       location: "office", rate: 850, active: true },
+  { id: "e2", name: "Priya Nair",   email: "priya@iksana.in",  role: "Senior Architect",  location: "office", rate: 750, active: true },
+  { id: "e3", name: "Rahul Sharma", email: "rahul@iksana.in",  role: "BIM Coordinator",   location: "remote", rate: 650, active: true },
+  { id: "e4", name: "Divya Menon",  email: "divya@iksana.in",  role: "Interior Designer", location: "remote", rate: 600, active: true },
+  { id: "e5", name: "Kiran Reddy",  email: "kiran@iksana.in",  role: "Revit Modeller",    location: "office", rate: 500, active: true },
+  { id: "e6", name: "Ananya Singh", email: "ananya@iksana.in", role: "QS Estimator",      location: "remote", rate: 580, active: true },
+  { id: "e7", name: "Vijay Thomas", email: "vijay@iksana.in",  role: "Revit Modeller",    location: "office", rate: 500, active: true },
+  { id: "e8", name: "Meera Pillai", email: "meera@iksana.in",  role: "Drafting Engineer", location: "remote", rate: 450, active: true },
 ];
 
 const SEED_PROJECTS = [
@@ -509,9 +509,9 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
     <div style={{ minHeight:"100vh",background:"#0c0e14",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Sora',sans-serif",padding:24 }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');*{box-sizing:border-box;margin:0;padding:0}input{background:#1a1d27!important;border:1px solid #2d3148!important;color:#e2e8f0!important;border-radius:8px;padding:10px 14px;font-family:inherit;font-size:14px;outline:none;width:100%}input:focus{border-color:#6366f1!important;box-shadow:0 0 0 3px rgba(99,102,241,.15)}.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;width:100%}.btn-primary{background:#6366f1;color:#fff}.btn-primary:hover{background:#4f46e5}.btn-ghost{background:transparent;color:#64748b;border:none;cursor:pointer;font-size:12px;font-family:inherit}`}</style>
       <div style={{ width:"100%",maxWidth:420 }}>
-        <div style={{ textAlign:"center",marginBottom:40 }}>
+          <div style={{ textAlign:"center",marginBottom:40 }}>
           <div style={{ fontSize:40,fontWeight:700,color:"#e2e8f0",letterSpacing:"-0.03em" }}>iksana</div>
-          <div style={{ fontSize:13,color:"#4a5568",marginTop:4 }}>Studio Management · v2.5</div>
+          <div style={{ fontSize:13,color:"#4a5568",marginTop:4 }}>Studio Management · v2.6</div>
         </div>
 
         {view === "login" && (
@@ -535,12 +535,6 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
             </button>
             <div style={{ textAlign:"center",marginTop:16 }}>
               <button className="btn-ghost" onClick={()=>{setView("forgot");setForgotEmail(email);}}>Forgot password?</button>
-            </div>
-            <div style={{ marginTop:20,padding:"12px 14px",background:"#1a1d27",borderRadius:8 }}>
-              <div style={{ fontSize:11,color:"#374151",marginBottom:4,fontWeight:600 }}>Demo credentials</div>
-              <div style={{ fontSize:11,color:"#4a5568" }}>Admin: arun@iksana.in / Admin@2025</div>
-              <div style={{ fontSize:11,color:"#4a5568" }}>Manager: priya@iksana.in / Iksana@2025</div>
-              <div style={{ fontSize:11,color:"#4a5568" }}>Operator: rahul@iksana.in / Iksana@2025</div>
             </div>
           </div>
         )}
