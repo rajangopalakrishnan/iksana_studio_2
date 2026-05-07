@@ -156,12 +156,12 @@ const LEAVE_COLORS = { casual: "#6366f1", sick: "#ef4444", annual: "#10b981", co
 
 async function load(key, fallback) {
   try {
-    const r = await window.storage.get(key);
-    return r ? JSON.parse(r.value) : fallback;
+    const r = localStorage.getItem(key);
+    return r ? JSON.parse(r) : fallback;
   } catch { return fallback; }
 }
 async function save(key, val) {
-  try { await window.storage.set(key, JSON.stringify(val)); } catch {}
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
 }
 
 // ─── Seed Data ──────────────────────────────────────────────────────────────
