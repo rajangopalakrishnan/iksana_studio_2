@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "./supabase";
 
 // ─── Persistent Storage Helpers ────────────────────────────────────────────
 // ─── Auth & Email Config Keys ─────────────────────────────────────────────────
@@ -156,12 +157,33 @@ const LEAVE_COLORS = { casual: "#6366f1", sick: "#ef4444", annual: "#10b981", co
 
 async function load(key, fallback) {
   try {
-    const r = localStorage.getItem(key);
-    return r ? JSON.parse(r) : fallback;
+    const { data, error } = await supabase
+      .from('iksana_storage')
+      .select('value')
+      .eq('key', key)
+      .single();
+    
+    if (error || !data) {
+      // Fallback to localStorage for migration or use default
+      const local = localStorage.getItem(key);
+      return local ? JSON.parse(local) : fallback;
+    }
+    return data.value;
   } catch { return fallback; }
 }
+
 async function save(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  try {
+    // Save to Supabase
+    await supabase
+      .from('iksana_storage')
+      .upsert({ key, value: val, updated_at: new Date().toISOString() });
+    
+    // Also save to localStorage as backup/cache
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch (err) {
+    console.error("Supabase Save Error:", err);
+  }
 }
 
 // ─── Seed Data ──────────────────────────────────────────────────────────────
