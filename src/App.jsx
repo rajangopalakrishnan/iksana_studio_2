@@ -37,7 +37,7 @@ const SEED_USERS_PLAIN = [
   { id:"u0", name:"Admin Studio",        email:"admin@iksana.tech",   role:"admin",    engineerId:"e1", password:"admin",       mustChange:true },
   { id:"u1", name:"Rajan Gopalakrishnan", email:"rg@iksana.tech",      role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
   { id:"u2", name:"Nisanth P",           email:"np@iksana.tech",      role:"admin",    engineerId:"e2", password:"Iksana@2025", mustChange:true  },
-  { id:"u3", name:"Baburaj",             email:"baburaj.tc@iksana.tech", role:"manager", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
+  { id:"u3", name:"Baburaj",             email:"baburaj.tc@iksana.tech", role:"admin",   engineerId:"e3", password:"Iksana@2025", mustChange:true  },
   { id:"u4", name:"Akheel",              email:"akheel.a@iksana.tech", role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:true  },
   { id:"u5", name:"Shaheeb",             email:"sheheeb.uk@iksana.tech", role:"operator", engineerId:"e5", password:"Iksana@2025", mustChange:true  },
   { id:"u6", name:"Devi Krishna",        email:"devikrishna.u@iksana.tech", role:"operator", engineerId:"e6", password:"Iksana@2025", mustChange:true  },
