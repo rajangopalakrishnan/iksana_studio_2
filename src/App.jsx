@@ -86,8 +86,8 @@ const can = (role, action) => {
 
 const TABS_FOR_ROLE = {
   admin:    ["dashboard","tasks","engineers","projects","allocation","attendance","productivity","reports","notifications","export","import","settings"],
-  manager:  ["dashboard","tasks","projects","allocation","attendance","notifications"],
-  operator: ["dashboard","tasks","attendance"],
+  manager:  ["dashboard","tasks","projects","allocation","attendance","notifications","export","import"],
+  operator: ["dashboard","tasks","attendance","export","import"],
 };
 
 // ─── Email Notification Engine (EmailJS) ─────────────────────────────────────
