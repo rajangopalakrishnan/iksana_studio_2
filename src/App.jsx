@@ -34,12 +34,17 @@ async function hashPassword(password) {
 // ─── Default Users (passwords will be hashed on first load) ──────────────────
 // Plaintext passwords shown here — on first save they are hashed and originals dropped
 const SEED_USERS_PLAIN = [
-  { id:"u1", name:"Rajan Gopalakrishnan", email:"rg@iksana.tech",      role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
   { id:"u0", name:"Admin Studio",        email:"admin@iksana.tech",   role:"admin",    engineerId:"e1", password:"admin",       mustChange:true },
+  { id:"u1", name:"Rajan Gopalakrishnan", email:"rg@iksana.tech",      role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
   { id:"u2", name:"Nisanth P",           email:"np@iksana.tech",      role:"admin",    engineerId:"e2", password:"Iksana@2025", mustChange:true  },
   { id:"u3", name:"Baburaj",             email:"baburaj.tc@iksana.tech", role:"manager", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
   { id:"u4", name:"Akheel",              email:"akheel.a@iksana.tech", role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:true  },
   { id:"u5", name:"Shaheeb",             email:"sheheeb.uk@iksana.tech", role:"operator", engineerId:"e5", password:"Iksana@2025", mustChange:true  },
+  { id:"u6", name:"Devi Krishna",        email:"devikrishna.u@iksana.tech", role:"operator", engineerId:"e6", password:"Iksana@2025", mustChange:true  },
+  { id:"u7", name:"Atheesh",             email:"athish.tm@iksana.tech", role:"operator", engineerId:"e7", password:"Iksana@2025", mustChange:true  },
+  { id:"u8", name:"Sreekumar",           email:"sreekumar.mp@iksana.tech", role:"operator", engineerId:"e8", password:"Iksana@2025", mustChange:true  },
+  { id:"u9", name:"Anjana. T A",         email:"anjana.ta@iksana.tech", role:"operator", engineerId:"e9", password:"Iksana@2025", mustChange:true  },
+  { id:"u10",name:"Anjitha",            email:"anjitha@iksana.tech",   role:"operator", engineerId:"e10",password:"Iksana@2025", mustChange:true  },
 ];
 
 async function initUsers(stored) {
@@ -611,13 +616,15 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
             <div style={{ textAlign:"center",marginTop:16,display:"flex",flexDirection:"column",gap:8 }}>
               <button className="btn-ghost" onClick={()=>{setView("forgot");setForgotEmail(email);}}>Forgot password?</button>
               <button className="btn-ghost" style={{ fontSize:10,opacity:0.4 }} onClick={async () => {
-                if (window.confirm("This will reset all users to default settings in your database. Continue?")) {
-                  localStorage.removeItem("iksana:users");
-                  await supabase.from('iksana_storage').delete().eq('key', 'iksana:users');
-                  window.location.reload();
+                if (window.confirm("CRITICAL: This will wipe all user settings and restore the team list from code. Continue?")) {
+                  localStorage.clear();
+                  try {
+                    await supabase.from('iksana_storage').delete().neq('key', 'keep-nothing');
+                  } catch(e) {}
+                  window.location.href = window.location.origin + window.location.pathname + '?reset=' + Date.now();
                 }
               }}>
-                Emergency: Reset Users to Default
+                Emergency: Reset System to Default
               </button>
             </div>
           </div>
