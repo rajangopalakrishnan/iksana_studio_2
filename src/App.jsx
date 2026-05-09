@@ -11,7 +11,7 @@ const KEYS = {
   attendance:   "iksana:attendance",
   leaves:       "iksana:leaves",
   dismissed:    "iksana:dismissed",
-  users:        "iksana:users",
+  users:        "iksana:users_v2_final",
   session:      "iksana:session",
   emailCfg:     "iksana:emailCfg",
   auditLog:     "iksana:auditLog",
@@ -591,7 +591,7 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
       <div style={{ width:"100%",maxWidth:420 }}>
           <div style={{ textAlign:"center",marginBottom:40 }}>
           <div style={{ fontSize:40,fontWeight:700,color:"#e2e8f0",letterSpacing:"-0.03em" }}>iksana</div>
-          <div style={{ fontSize:13,color:"#4a5568",marginTop:4 }}>Studio Management · v2.6</div>
+          <div style={{ fontSize:13,color:"#4a5568",marginTop:4 }}>Studio Management · v2.7</div>
         </div>
 
         {view === "login" && (
