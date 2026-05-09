@@ -205,12 +205,16 @@ async function load(key, fallback) {
       .single();
     
     if (error || !data) {
-      // Fallback to localStorage for migration or use default
+      console.warn(`Load fail for ${key}:`, error);
       const local = localStorage.getItem(key);
       return local ? JSON.parse(local) : fallback;
     }
     return data.value;
-  } catch { return fallback; }
+  } catch (e) { 
+    console.error(`Fatal load error for ${key}:`, e);
+    const local = localStorage.getItem(key);
+    return local ? JSON.parse(local) : fallback;
+  }
 }
 
 async function save(key, val) {
@@ -546,7 +550,11 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
     }
     setLoading(true); setError("");
     const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) { setError("No account found with that email."); setLoading(false); return; }
+    if (!user) { 
+      setError(`No account found with that email. (System sees ${users.length} total users)`); 
+      setLoading(false); 
+      return; 
+    }
     const hash = await hashPassword(password);
     if (hash !== user.passwordHash) {
       const newCount = (attempts[email] || 0) + 1;
