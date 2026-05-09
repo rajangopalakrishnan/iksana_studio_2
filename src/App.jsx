@@ -34,14 +34,15 @@ async function hashPassword(password) {
 // ─── Default Users (passwords will be hashed on first load) ──────────────────
 // Plaintext passwords shown here — on first save they are hashed and originals dropped
 const SEED_USERS_PLAIN = [
-  { id:"u1", name:"Arun Kumar",   email:"arun@iksana.in",     role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
-  { id:"u2", name:"Priya Nair",   email:"priya@iksana.in",  role:"manager",  engineerId:"e2", password:"Iksana@2025", mustChange:true  },
-  { id:"u3", name:"Rahul Sharma", email:"rahul@iksana.in",  role:"operator", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
-  { id:"u4", name:"Divya Menon",  email:"divya@iksana.in",  role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:true  },
-  { id:"u5", name:"Kiran Reddy",  email:"kiran@iksana.in",  role:"operator", engineerId:"e5", password:"Iksana@2025", mustChange:true  },
-  { id:"u6", name:"Ananya Singh", email:"ananya@iksana.in", role:"manager",  engineerId:"e6", password:"Iksana@2025", mustChange:true  },
-  { id:"u7", name:"Vijay Thomas", email:"vijay@iksana.in",  role:"operator", engineerId:"e7", password:"Iksana@2025", mustChange:true  },
-  { id:"u8", name:"Meera Pillai", email:"meera@iksana.in",  role:"operator", engineerId:"e8", password:"Iksana@2025", mustChange:true  },
+  { id:"u1", name:"Arun Kumar",   email:"arun@iksana.in",      role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
+  { id:"u0", name:"Admin Studio", email:"admin@iksana.tech",   role:"admin",    engineerId:"e1", password:"admin",       mustChange:true },
+  { id:"u2", name:"Priya Nair",   email:"priya@iksana.in",     role:"manager",  engineerId:"e2", password:"Iksana@2025", mustChange:true  },
+  { id:"u3", name:"Rahul Sharma", email:"rahul@iksana.in",     role:"operator", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
+  { id:"u4", name:"Divya Menon",  email:"divya@iksana.in",     role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:true  },
+  { id:"u5", name:"Kiran Reddy",  email:"kiran@iksana.in",     role:"operator", engineerId:"e5", password:"Iksana@2025", mustChange:true  },
+  { id:"u6", name:"Ananya Singh", email:"ananya@iksana.in",    role:"manager",  engineerId:"e6", password:"Iksana@2025", mustChange:true  },
+  { id:"u7", name:"Vijay Thomas", email:"vijay@iksana.in",     role:"operator", engineerId:"e7", password:"Iksana@2025", mustChange:true  },
+  { id:"u8", name:"Meera Pillai", email:"meera@iksana.in",     role:"operator", engineerId:"e8", password:"Iksana@2025", mustChange:true  },
 ];
 
 async function initUsers(stored) {
