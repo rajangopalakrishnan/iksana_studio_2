@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase, uploadFile, getFileUrl } from "./supabase";
+// Vercel Deployment Trigger: 2026-05-13 14:38
 
 // ─── Persistent Storage Helpers ────────────────────────────────────────────
 // ─── Auth & Email Config Keys ─────────────────────────────────────────────────
