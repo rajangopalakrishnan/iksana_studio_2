@@ -253,26 +253,9 @@ const SEED_ENGINEERS = [
   { id: "e10", name: "Anjitha",            email: "anjitha@iksana.tech",   role: "CAD-Junior Level",   location: "office", rate: 450, active: true },
 ];
 
-const SEED_PROJECTS = [
-  { id: "p1", name: "NEOM Residential Block C", client: "NEOM", region: "KSA", status: "active", budget: 420000, startDate: "2025-01-15", endDate: "2025-08-30" },
-  { id: "p2", name: "Dubai Marina Interiors", client: "Emaar", region: "UAE", status: "active", budget: 180000, startDate: "2025-03-01", endDate: "2025-07-31" },
-  { id: "p3", name: "Abu Dhabi Villa FF&E", client: "Private", region: "UAE", status: "active", budget: 95000, startDate: "2025-02-01", endDate: "2025-06-15" },
-  { id: "p4", name: "Aramco Office Fit-Out", client: "Saudi Aramco", region: "KSA", status: "active", budget: 320000, startDate: "2024-11-01", endDate: "2025-09-30" },
-  { id: "p5", name: "Riyadh Retail Interiors", client: "Al Futtaim", region: "KSA", status: "completed", budget: 140000, startDate: "2024-08-01", endDate: "2025-01-31" },
-];
+const SEED_PROJECTS = [];
 
-const SEED_TASKS = [
-  { id: "t1", projectId: "p1", title: "NEOM BIM Execution Plan", assignee: "e1", status: "completed", priority: "high", estimatedHours: 24, loggedHours: 22, dueDate: "2025-02-01", createdAt: "2025-01-15", discipline: "BIM" },
-  { id: "t2", projectId: "p1", title: "Level 1–5 Revit Modelling", assignee: "e3", status: "in-progress", priority: "high", estimatedHours: 120, loggedHours: 74, dueDate: "2025-05-30", createdAt: "2025-02-01", discipline: "Architecture" },
-  { id: "t3", projectId: "p1", title: "FF&E Schedule Generation", assignee: "e4", status: "in-progress", priority: "medium", estimatedHours: 40, loggedHours: 18, dueDate: "2025-06-15", createdAt: "2025-03-01", discipline: "Interior" },
-  { id: "t4", projectId: "p2", title: "Interior Elevations – All Units", assignee: "e2", status: "in-progress", priority: "high", estimatedHours: 80, loggedHours: 55, dueDate: "2025-05-20", createdAt: "2025-03-01", discipline: "Interior" },
-  { id: "t5", projectId: "p2", title: "BOQ – Finishes & Fixtures", assignee: "e6", status: "in-progress", priority: "medium", estimatedHours: 32, loggedHours: 20, dueDate: "2025-06-01", createdAt: "2025-03-15", discipline: "QS" },
-  { id: "t6", projectId: "p3", title: "Villa FF&E Families", assignee: "e5", status: "completed", priority: "medium", estimatedHours: 48, loggedHours: 50, dueDate: "2025-03-31", createdAt: "2025-02-01", discipline: "BIM" },
-  { id: "t7", projectId: "p4", title: "Aramco Compliance Checklist", assignee: "e1", status: "in-progress", priority: "high", estimatedHours: 16, loggedHours: 10, dueDate: "2025-05-10", createdAt: "2025-04-01", discipline: "BIM" },
-  { id: "t8", projectId: "p4", title: "Office Layout Revit Model", assignee: "e7", status: "in-progress", priority: "high", estimatedHours: 96, loggedHours: 40, dueDate: "2025-07-01", createdAt: "2025-03-01", discipline: "Architecture" },
-  { id: "t9", projectId: "p4", title: "4D Schedule Navisworks", assignee: "e3", status: "not-started", priority: "medium", estimatedHours: 28, loggedHours: 0, dueDate: "2025-07-15", createdAt: "2025-04-10", discipline: "4D" },
-  { id: "t10", projectId: "p2", title: "Trade Drawing Package", assignee: "e8", status: "in-progress", priority: "low", estimatedHours: 60, loggedHours: 25, dueDate: "2025-06-30", createdAt: "2025-03-20", discipline: "Drafting" },
-];
+const SEED_TASKS = [];
 
 const SEED_PRODUCTIVITY = {
   "BIM": { unit: "drawings/day", rate: 3 },
