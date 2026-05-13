@@ -293,8 +293,33 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [showChangePwd, setShowChangePwd] = useState(false);
 
+  const reloadData = async () => {
+    setLoading(true);
+    const [eng, proj, tsk, prod, att, lvs, dis, usr, emailConfig, audit] = await Promise.all([
+      load(KEYS.engineers, []),
+      load(KEYS.projects, []),
+      load(KEYS.tasks, []),
+      load(KEYS.productivity, SEED_PRODUCTIVITY),
+      load(KEYS.attendance, []),
+      load(KEYS.leaves, []),
+      load(KEYS.dismissed, []),
+      load(KEYS.users, null),
+      load(KEYS.emailCfg, DEFAULT_EMAIL_CFG),
+      load(KEYS.auditLog, []),
+    ]);
+    const initializedUsers = await initUsers(usr);
+    setEngineers(eng); setProjects(proj); setTasks(tsk); setProductivity(prod);
+    setAttendance(att); setLeaves(lvs); setDismissed(dis);
+    setUsers(initializedUsers);
+    setEmailCfg(emailConfig);
+    setAuditLog(audit);
+    setLoading(false);
+    showToast("Data synchronized with database");
+  };
+
   useEffect(() => {
     (async () => {
+      // Use reloadData logic for initial load but with seeds
       const [eng, proj, tsk, prod, att, lvs, dis, rawUsers, emailConfig, audit, sessionData] = await Promise.all([
         load(KEYS.engineers, SEED_ENGINEERS),
         load(KEYS.projects, SEED_PROJECTS),
@@ -489,9 +514,10 @@ export default function App() {
               <div style={{ fontSize:10,...ROLES[role] }}>{ROLES[role].label}</div>
             </div>
           </div>
+          <button className="btn btn-ghost" style={{ width:"100%",fontSize:11,padding:"4px 8px",justifyContent:"center",marginBottom:4,color:"#6366f1" }} onClick={reloadData}>🔄 Sync with Database</button>
           <button className="btn btn-ghost" style={{ width:"100%",fontSize:11,padding:"4px 8px",justifyContent:"center",marginBottom:4 }} onClick={() => setShowChangePwd(true)}>Change Password</button>
           <button className="btn btn-ghost" style={{ width:"100%",fontSize:11,padding:"4px 8px",justifyContent:"center" }} onClick={handleLogout}>Sign Out</button>
-          <div style={{ fontSize:10,color:"#374151",marginTop:6,textAlign:"center" }}>v2.5 · ISO 19650</div>
+          <div style={{ fontSize:10,color:"#374151",marginTop:6,textAlign:"center" }}>v2.8 · ISO 19650</div>
         </div>
       </div>
 
