@@ -1149,8 +1149,13 @@ function Tasks({ tasks, engineers, projects, setTasks, showToast, role, currentU
 }
 
 function TaskForm({ task, engineers, projects, onSave, onClose, role, currentUser }) {
-  const [d, setD] = useState(task || { title:"", projectId:"", assignee: role==="operator" ? currentUser.engineerId : "", discipline:"BIM", priority:"medium", status:"not-started", estimatedHours:"", dueDate:"" });
+  // Convert YYYY-MM-DD → DD/MM/YYYY for display
+  const toDisplay = (v) => { if (!v) return ""; const [y,m,d] = v.split("-"); return `${d}/${m}/${y}`; };
+  // Convert DD/MM/YYYY → YYYY-MM-DD for storage
+  const toStorage = (v) => { if (!v) return ""; const [d,m,y] = v.split("/"); return (d&&m&&y) ? `${y}-${m}-${d}` : ""; };
+  const [d, setD] = useState(task ? { ...task, dueDate: toDisplay(task.dueDate) } : { title:"", projectId:"", assignee: role==="operator" ? currentUser.engineerId : "", discipline:"BIM", priority:"medium", status:"not-started", estimatedHours:"", dueDate:"" });
   const set = (k,v) => setD(p=>({...p,[k]:v}));
+  const handleSave = () => { onSave({ ...d, dueDate: toStorage(d.dueDate) }); };
   return (
     <div className="modal-bg">
       <div className="modal">
@@ -1198,9 +1203,9 @@ function TaskForm({ task, engineers, projects, onSave, onClose, role, currentUse
             <input type="number" value={d.estimatedHours} onChange={e=>set("estimatedHours",Number(e.target.value))} placeholder="40" />
           </div>
         </div>
-        <div className="form-row"><label>Due Date</label><input type="date" value={d.dueDate} onChange={e=>set("dueDate",e.target.value)} /></div>
+        <div className="form-row"><label>Due Date (DD/MM/YYYY)</label><input type="text" value={d.dueDate} onChange={e=>set("dueDate",e.target.value)} placeholder="e.g. 31/12/2025" maxLength={10} /></div>
         <div style={{ display:"flex", gap:8, marginTop:8 }}>
-          <button className="btn btn-primary" onClick={()=>onSave(d)}>Save Task</button>
+          <button className="btn btn-primary" onClick={handleSave}>Save Task</button>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
         </div>
       </div>
