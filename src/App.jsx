@@ -758,6 +758,17 @@ function ChangePasswordModal({ user, forced, onSave, onClose }) {
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 function Dashboard({ engineers, projects, tasks, setTab, role, currentUser }) {
+  const [dbStatus, setDbStatus] = useState("checking...");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { error } = await supabase.from('iksana_storage').select('key').limit(1);
+        setDbStatus(error ? "Disconnected (Check Keys)" : "Connected to Supabase");
+      } catch (e) { setDbStatus("Connection Error"); }
+    })();
+  }, []);
+
   const activeProjects = projects.filter(p => p.status === "active");
   const inProgressTasks = tasks.filter(t => t.status === "in-progress");
   const overdueTasks = tasks.filter(t => t.status !== "completed" && new Date(t.dueDate) < new Date());
@@ -779,7 +790,12 @@ function Dashboard({ engineers, projects, tasks, setTab, role, currentUser }) {
 
   return (
     <div>
-      <PageHeader title="Dashboard" sub={new Date().toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" })} />
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <PageHeader title="Dashboard" sub={new Date().toLocaleDateString("en-IN", { weekday:"long", year:"numeric", month:"long", day:"numeric" })} />
+        <div style={{ fontSize:10, color:dbStatus.includes("Connected") ? "#10b981" : "#ef4444", background:dbStatus.includes("Connected") ? "#10b98115" : "#ef444415", padding:"4px 10px", borderRadius:20, fontWeight:600 }}>
+          ● {dbStatus}
+        </div>
+      </div>
 
       {/* Stat row — financial cards hidden for operator */}
       <div style={{ display:"grid", gridTemplateColumns:`repeat(${can(role,"viewFinancials") ? 4 : 2},1fr)`, gap:16, marginBottom:24 }}>
