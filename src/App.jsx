@@ -34,7 +34,7 @@ async function hashPassword(password) {
 // ─── Default Users (passwords will be hashed on first load) ──────────────────
 // Plaintext passwords shown here — on first save they are hashed and originals dropped
 const SEED_USERS_PLAIN = [
-  { id:"u0", name:"Admin Studio",        email:"admin@iksana.tech",   role:"admin",    engineerId:"e1", password:"admin",       mustChange:true },
+  { id:"u0", name:"Admin Studio",        email:"admin@iksana.tech",   role:"admin",    engineerId:"e1", password:"Iksana26",    mustChange:false },
   { id:"u1", name:"Rajan Gopalakrishnan", email:"rg@iksana.tech",      role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
   { id:"u2", name:"Nisanth P",           email:"np@iksana.tech",      role:"admin",    engineerId:"e2", password:"Iksana@2025", mustChange:true  },
   { id:"u3", name:"Baburaj",             email:"baburaj.tc@iksana.tech", role:"operator", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
@@ -558,7 +558,8 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
       setError(`Account locked. Try again in ${mins} minute(s).`); return;
     }
     setLoading(true); setError("");
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const uEmail = email.trim().toLowerCase();
+    const user = users.find(u => u.email.toLowerCase() === uEmail);
     if (!user) { 
       setError(`No account found with that email. (System sees ${users.length} total users)`); 
       setLoading(false); 
@@ -569,8 +570,8 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
       const newCount = (attempts[email] || 0) + 1;
       setAttempts(prev => ({ ...prev, [email]: newCount }));
       if (newCount >= 5) {
-        setLockedUntil(prev => ({ ...prev, [email]: now + 15 * 60000 }));
-        setError("Too many failed attempts. Account locked for 15 minutes.");
+        setLockedUntil(prev => ({ ...prev, [email]: now + 1 * 60000 }));
+        setError("Too many failed attempts. Account locked for 1 minute for security. Refresh to reset.");
       } else {
         setError(`Incorrect password. ${5 - newCount} attempt(s) remaining.`);
       }
@@ -604,12 +605,12 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
             <div style={{ fontSize:13,color:"#4a5568",marginBottom:24 }}>Use your Iksana studio email and password</div>
             <div style={{ marginBottom:14 }}>
               <label style={{ fontSize:12,color:"#64748b",marginBottom:6,display:"block",fontWeight:500 }}>Email address</label>
-              <input type="email" value={email} onChange={e=>{setEmail(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="you@iksana.in" autoFocus />
+              <input type="email" value={email} onChange={e=>{setEmail(e.target.value.trim());setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="you@iksana.in" autoFocus />
             </div>
             <div style={{ marginBottom:6 }}>
               <label style={{ fontSize:12,color:"#64748b",marginBottom:6,display:"block",fontWeight:500 }}>Password</label>
               <div style={{ position:"relative" }}>
-                <input type={showPwd?"text":"password"} value={password} onChange={e=>{setPassword(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Enter your password" />
+                <input type={showPwd?"text":"password"} value={password} onChange={e=>{setPassword(e.target.value.trim());setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} placeholder="Enter your password" />
                 <button onClick={()=>setShowPwd(!showPwd)} style={{ position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#64748b",cursor:"pointer",fontSize:14 }}>{showPwd?"🙈":"👁"}</button>
               </div>
             </div>
