@@ -351,6 +351,25 @@ export default function App() {
       setUsers(initializedUsers);
       setEmailCfg(emailConfig);
       setAuditLog(audit);
+
+      // AUTO-RESCUE LOGIC:
+      // If the database is empty but we have local data from a previous session,
+      // and we just connected successfully, push the local data back to the database.
+      if (proj.length === 0 || tsk.length === 0) {
+        const localProj = JSON.parse(localStorage.getItem(KEYS.projects) || "[]");
+        const localTasks = JSON.parse(localStorage.getItem(KEYS.tasks) || "[]");
+        if (localProj.length > 0 && proj.length === 0) {
+          console.log("Auto-Rescue: Restoring projects to database...");
+          setProjects(localProj);
+          await save(KEYS.projects, localProj);
+        }
+        if (localTasks.length > 0 && tsk.length === 0) {
+          console.log("Auto-Rescue: Restoring tasks to database...");
+          setTasks(localTasks);
+          await save(KEYS.tasks, localTasks);
+        }
+      }
+
       // Restore session if valid
       if (sessionData?.userId) {
         const sessionUser = initializedUsers.find(u => u.id === sessionData.userId);
