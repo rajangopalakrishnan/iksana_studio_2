@@ -321,7 +321,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       // Use reloadData logic for initial load but with seeds
-      const [eng, proj, tsk, prod, att, lvs, dis, rawUsers, emailConfig, audit, sessionData] = await Promise.all([
+      const [eng, proj, tsk, prod, att, lvs, dis, rawUsers, emailConfig, audit] = await Promise.all([
         load(KEYS.engineers, SEED_ENGINEERS),
         load(KEYS.projects, SEED_PROJECTS),
         load(KEYS.tasks, SEED_TASKS),
