@@ -536,7 +536,7 @@ export default function App() {
           <button className="btn btn-ghost" style={{ width:"100%",fontSize:11,padding:"4px 8px",justifyContent:"center",marginBottom:4,color:"#6366f1" }} onClick={reloadData}>🔄 Sync with Database</button>
           <button className="btn btn-ghost" style={{ width:"100%",fontSize:11,padding:"4px 8px",justifyContent:"center",marginBottom:4 }} onClick={() => setShowChangePwd(true)}>Change Password</button>
           <button className="btn btn-ghost" style={{ width:"100%",fontSize:11,padding:"4px 8px",justifyContent:"center" }} onClick={handleLogout}>Sign Out</button>
-          <div style={{ fontSize:10,color:"#374151",marginTop:6,textAlign:"center" }}>v2.8 · ISO 19650</div>
+          <div style={{ fontSize:10,color:"#374151",marginTop:6,textAlign:"center" }}>v3.0 · ISO 19650</div>
         </div>
       </div>
 
