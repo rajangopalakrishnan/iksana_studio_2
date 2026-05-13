@@ -666,7 +666,7 @@ function LoginScreen({ users, onLogin, onForgotPassword }) {
       <div style={{ width:"100%",maxWidth:420 }}>
           <div style={{ textAlign:"center",marginBottom:40 }}>
           <div style={{ fontSize:40,fontWeight:700,color:"#e2e8f0",letterSpacing:"-0.03em" }}>iksana</div>
-          <div style={{ fontSize:13,color:"#4a5568",marginTop:4 }}>Studio Management · v2.7</div>
+          <div style={{ fontSize:13,color:"#4a5568",marginTop:4 }}>Studio Management · v3.0</div>
         </div>
 
         {view === "login" && (
