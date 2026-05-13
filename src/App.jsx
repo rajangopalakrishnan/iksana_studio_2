@@ -783,8 +783,12 @@ function Dashboard({ engineers, projects, tasks, setTab, role, currentUser }) {
     (async () => {
       try {
         const { error } = await supabase.from('iksana_storage').select('key').limit(1);
-        setDbStatus(error ? "Disconnected (Check Keys)" : "Connected to Supabase");
-      } catch (e) { setDbStatus("Connection Error"); }
+        if (error) {
+          setDbStatus(`Error: ${error.message || 'Check Keys'}`);
+        } else {
+          setDbStatus("Connected to Supabase");
+        }
+      } catch (e) { setDbStatus(`Connection Error: ${e.message}`); }
     })();
   }, []);
 
