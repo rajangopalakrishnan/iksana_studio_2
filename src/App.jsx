@@ -362,19 +362,25 @@ export default function App() {
       // AUTO-RESCUE LOGIC:
       // If the database is empty but we have local data from a previous session,
       // and we just connected successfully, push the local data back to the database.
-      if (proj.length === 0 || tsk.length === 0) {
-        const localProj = JSON.parse(localStorage.getItem(KEYS.projects) || "[]");
-        const localTasks = JSON.parse(localStorage.getItem(KEYS.tasks) || "[]");
-        if (localProj.length > 0 && proj.length === 0) {
-          console.log("Auto-Rescue: Restoring projects to database...");
-          setProjects(localProj);
-          await save(KEYS.projects, localProj);
+      const rescue = async (key, stateSetter, seed) => {
+        const remoteData = await load(key, []);
+        if (remoteData.length === 0) {
+          const localData = JSON.parse(localStorage.getItem(key) || JSON.stringify(seed || []));
+          if (localData.length > 0) {
+            console.log(`Auto-Rescue: Restoring ${key} to database...`);
+            stateSetter(localData);
+            await save(key, localData);
+          }
         }
-        if (localTasks.length > 0 && tsk.length === 0) {
-          console.log("Auto-Rescue: Restoring tasks to database...");
-          setTasks(localTasks);
-          await save(KEYS.tasks, localTasks);
-        }
+      };
+
+      if (proj.length === 0 || tsk.length === 0 || eng.length === 0) {
+        await rescue(KEYS.projects, setProjects, SEED_PROJECTS);
+        await rescue(KEYS.tasks, setTasks, SEED_TASKS);
+        await rescue(KEYS.engineers, setEngineers, SEED_ENGINEERS);
+        await rescue(KEYS.attendance, setAttendance, SEED_ATTENDANCE);
+        await rescue(KEYS.productivity, setProductivity, SEED_PRODUCTIVITY);
+        await rescue(KEYS.leaves, setLeaves, SEED_LEAVES);
       }
 
       // Restore session if valid
