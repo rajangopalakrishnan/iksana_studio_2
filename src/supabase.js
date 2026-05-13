@@ -1,21 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rthttabfrxoguxkvjslu.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0aHR0YWJmcnhvZ3V4a3Zqc2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNjYyMjgsImV4cCI6MjA5Mzc0MjIyOH0.AGS8fbmpTDIWRQYygixdNVmjxEchlhiYgzeFGYd5aug'
+// HARDCODED KEYS FOR GUARANTEED CONNECTION
+const supabaseUrl = 'https://rthttabfrxoguxkvjslu.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0aHR0YWJmcnhvZ3V4a3Zqc2x1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNjYyMjgsImV4cCI6MjA5Mzc0MjIyOH0.AGS8fbmpTDIWRQYygixdNVmjxEchlhiYgzeFGYd5aug'
 
-// Safety check to prevent app from crashing if env vars are missing during setup
-export const supabase = (typeof supabaseUrl === 'string' && supabaseUrl.startsWith('http') && typeof supabaseAnonKey === 'string' && supabaseAnonKey.startsWith('eyJ')) 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
-  : { 
-      from: () => ({ 
-        select: () => ({ 
-          eq: () => ({ single: () => Promise.resolve({ data: null, error: { message: "Mock Mode: Missing or Invalid Keys in .env" } }) }),
-          limit: () => Promise.resolve({ data: [], error: { message: "Mock Mode: Missing or Invalid Keys in .env" } })
-        }), 
-        upsert: () => Promise.resolve({ error: { message: "Mock Mode" } }) 
-      }), 
-      storage: { from: () => ({ upload: () => Promise.resolve({ error: true }), getPublicUrl: () => ({ data: { publicUrl: "" } }) }) } 
-    };
+// Always use the real client, no more mock mode
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export const uploadFile = async (file, bucket = 'task-attachments') => {
   const fileExt = file.name.split('.').pop();
