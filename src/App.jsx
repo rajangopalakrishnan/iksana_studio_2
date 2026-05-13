@@ -1166,7 +1166,7 @@ function TaskForm({ task, engineers, projects, onSave, onClose, role, currentUse
             {can(role,"editTasks") && role!=="operator" ? (
               <select value={d.assignee} onChange={e=>set("assignee",e.target.value)}>
                 <option value="">Select engineer</option>
-                {engineers.filter(e=>e.active).map(e=><option key={e.id} value={e.id}>{e.name}</option>)}
+                {engineers.map(e=><option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
             ) : (
               <input value={engineers.find(e=>e.id===currentUser.engineerId)?.name||""} disabled style={{ opacity:0.6 }} />
