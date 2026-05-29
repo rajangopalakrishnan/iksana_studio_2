@@ -1814,7 +1814,10 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [editingLeave, setEditingLeave] = useState(null);
 
-  const activeEng = engineers.filter(e => e.active);
+  // Operators only see themselves
+  const activeEng = role === "operator"
+    ? engineers.filter(e => e.id === currentUser.engineerId)
+    : engineers.filter(e => e.active);
 
   // ── Today's attendance helpers ──
   const getRecord = (engId, date) => attendance.find(a => a.engineerId === engId && a.date === date);
@@ -2076,7 +2079,11 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
           {/* Leave balance summary */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginBottom: 24 }}>
             {LEAVE_TYPES.map(type => {
-              const count = leaves.filter(l => l.type === type && l.status === "approved").length;
+              const count = leaves.filter(l =>
+                l.type === type &&
+                l.status === "approved" &&
+                (role !== "operator" || l.engineerId === currentUser.engineerId)
+              ).length;
               return (
                 <div key={type} className="stat-card" style={{ padding: "14px 16px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
