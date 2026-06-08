@@ -48,6 +48,7 @@ const SEED_USERS_PLAIN = [
   { id:"u9", name:"Anjana. T A",         email:"anjana.ta@iksana.tech", role:"operator", engineerId:"e9", password:"Iksana@2025", mustChange:true  },
   { id:"u10",name:"Anjitha",            email:"anjitha@iksana.tech",   role:"operator", engineerId:"e10",password:"Iksana@2025", mustChange:true  },
   { id:"u12",name:"Shivram Nallepilly",  email:"shivram.nv@iksana.tech", role:"manager",  engineerId:"e12",password:"Iksana@2025", mustChange:true  },
+  { id:"u13",name:"Janani Jayaraman",    email:"janani.j@iksana.tech",   role:"operator", engineerId:"e13",password:"Iksana@2025", mustChange:true  },
 ];
 
 async function initUsers(stored) {
@@ -256,7 +257,8 @@ const SEED_ENGINEERS = [
   { id: "e8", name: "Sreekumar",           email: "sreekumar.mp@iksana.tech", role: "CAD Mid Level",     location: "remote", rate: 650, active: true },
   { id: "e9", name: "Anjana. T A",         email: "anjana.ta@iksana.tech", role: "CAD-Junior Level",   location: "office", rate: 450, active: true },
   { id: "e10", name: "Anjitha",            email: "anjitha@iksana.tech",   role: "CAD-Junior Level",   location: "office", rate: 450, active: true },
-  { id: "e12", name: "Shivram Nallepilly", email: "shivram.nv@iksana.tech", role: "Manager Pre-contracts", location: "office", rate: 850, active: true },
+  { id: "e12", name: "Shivram Nallepilly", email: "shivram.nv@iksana.tech", role: "Lead Estimator", location: "office", rate: 850, active: true },
+  { id: "e13", name: "Janani Jayaraman",    email: "janani.j@iksana.tech",   role: "Estimator",      location: "office", rate: 650, active: true },
 ];
 
 const SEED_PROJECTS = [];
@@ -358,13 +360,17 @@ export default function App() {
         await save(KEYS.users, initializedUsers);
       }
 
-      // Safety Patch: Ensure Shivram Nallepilly is present in both engineers and users
+      // Safety Patch: Ensure Shivram Nallepilly and Janani Jayaraman are present in both engineers and users
       let dbUpdated = false;
       const shivramEmail = 'shivram.nv@iksana.tech';
+      const jananiEmail = 'janani.j@iksana.tech';
       
-      const hasShivramEng = eng.some(e => e.email.toLowerCase() === shivramEmail);
-      if (!hasShivramEng) {
-        eng.push({ id: "e12", name: "Shivram Nallepilly", email: shivramEmail, role: "Manager Pre-contracts", location: "office", rate: 850, active: true });
+      let shivramEng = eng.find(e => e.email.toLowerCase() === shivramEmail);
+      if (!shivramEng) {
+        eng.push({ id: "e12", name: "Shivram Nallepilly", email: shivramEmail, role: "Lead Estimator", location: "office", rate: 850, active: true });
+        dbUpdated = true;
+      } else if (shivramEng.role !== "Lead Estimator") {
+        shivramEng.role = "Lead Estimator";
         dbUpdated = true;
       }
       
@@ -374,14 +380,23 @@ export default function App() {
         initializedUsers.push({ id: "u12", name: "Shivram Nallepilly", email: shivramEmail, role: "manager", engineerId: "e12", passwordHash: defaultHash, mustChange: true });
         dbUpdated = true;
       }
+      
+      const hasJananiEng = eng.some(e => e.email.toLowerCase() === jananiEmail);
+      if (!hasJananiEng) {
+        eng.push({ id: "e13", name: "Janani Jayaraman", email: jananiEmail, role: "Estimator", location: "office", rate: 650, active: true });
+        dbUpdated = true;
+      }
+      
+      const hasJananiUser = initializedUsers.some(u => u.email.toLowerCase() === jananiEmail);
+      if (!hasJananiUser) {
+        const defaultHash = await hashPassword("Iksana@2025");
+        initializedUsers.push({ id: "u13", name: "Janani Jayaraman", email: jananiEmail, role: "operator", engineerId: "e13", passwordHash: defaultHash, mustChange: true });
+        dbUpdated = true;
+      }
 
       if (dbUpdated) {
-        if (!hasShivramEng) {
-          await save(KEYS.engineers, eng);
-        }
-        if (!hasShivramUser) {
-          await save(KEYS.users, initializedUsers);
-        }
+        await save(KEYS.engineers, eng);
+        await save(KEYS.users, initializedUsers);
       }
 
       setEngineers(eng); setProjects(proj); setTasks(tsk); setProductivity(prod);
@@ -1352,7 +1367,7 @@ function Engineers({ engineers, tasks, setEngineers, showToast, role, users, set
 function EngineerForm({ engineer, onSave, onClose }) {
   const [d, setD] = useState(engineer || { name:"", email:"", phone:"", role:"", location:"office", rate:"" });
   const set = (k,v) => setD(p=>({...p,[k]:v}));
-  const ROLES = ["BIM Manager","Senior Architect","BIM Coordinator","Interior Designer","Revit Modeller","QS Estimator","Drafting Engineer","4D Planner","Manager Pre-contracts"];
+  const ROLES = ["BIM Manager","Senior Architect","BIM Coordinator","Interior Designer","Revit Modeller","QS Estimator","Drafting Engineer","4D Planner","Manager Pre-contracts","Lead Estimator","Estimator"];
   return (
     <>
       <div className="form-row"><label>Full Name</label><input value={d.name} onChange={e=>set("name",e.target.value)} placeholder="e.g. Rahul Sharma" /></div>
@@ -2768,7 +2783,7 @@ function Settings({ users, setUsers, emailCfg, setEmailCfg, auditLog, showToast,
   const [testSending, setTestSending] = useState(false);
   const [cfg, setCfg] = useState(emailCfg);
 
-  const ENGINEER_ROLES = ["BIM Manager","Senior Architect","BIM Coordinator","Interior Designer","Revit Modeller","QS Estimator","Drafting Engineer","4D Planner","Manager Pre-contracts"];
+  const ENGINEER_ROLES = ["BIM Manager","Senior Architect","BIM Coordinator","Interior Designer","Revit Modeller","QS Estimator","Drafting Engineer","4D Planner","Manager Pre-contracts","Lead Estimator","Estimator"];
 
   const handleSaveUser = async (data) => {
     let updated;
