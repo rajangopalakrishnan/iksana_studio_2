@@ -1857,10 +1857,13 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [editingLeave, setEditingLeave] = useState(null);
 
-  // Operators only see themselves
-  const activeEng = role === "operator"
-    ? engineers.filter(e => e.id === currentUser.engineerId)
-    : engineers.filter(e => e.active);
+  const isBiburaj = currentUser?.email?.toLowerCase() === "btp@iksana.tech";
+  const canMark = role === "admin" || isBiburaj;
+
+  // Only Admin or Biburaj can see everyone; others only see themselves
+  const activeEng = canMark
+    ? engineers.filter(e => e.active)
+    : engineers.filter(e => e.id === currentUser.engineerId);
 
   // ── Today's attendance helpers ──
   const getRecord = (engId, date) => attendance.find(a => a.engineerId === engId && a.date === date);
@@ -1959,7 +1962,7 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
 
       {/* Sub-tabs */}
       <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        {[["today", "Daily Attendance"], ["monthly", "Monthly Summary"], ["leaves", "Leave Management"]].filter(([id]) => role !== "operator" || id === "leaves").map(([id, label]) => (
+        {[["today", "Daily Attendance"], ["monthly", "Monthly Summary"], ["leaves", "Leave Management"]].map(([id, label]) => (
           <button key={id} className={`btn ${view === id ? "btn-primary" : "btn-ghost"}`} onClick={() => setView(id)}>{label}</button>
         ))}
       </div>
@@ -2003,7 +2006,7 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
                 </tr>
               </thead>
               <tbody>
-                {activeEng.filter(eng => role === "operator" ? eng.id === currentUser.engineerId : true).map(eng => {
+                {activeEng.map(eng => {
                   const rec = getRecord(eng.id, selectedDate);
                   const hours = calcHours(rec);
                   const isOnLeave = leaves.some(l => l.engineerId === eng.id && l.status === "approved" && selectedDate >= l.startDate && selectedDate <= l.endDate);
@@ -2027,26 +2030,40 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: "#94a3b8" }}>
                         {rec?.checkIn ? (
-                          <input type="time" value={rec.checkIn} onChange={e => setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkIn: e.target.value } : a))} style={{ width: 100, padding: "4px 8px" }} />
+                          canMark ? (
+                            <input type="time" value={rec.checkIn} onChange={e => setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkIn: e.target.value } : a))} style={{ width: 100, padding: "4px 8px" }} />
+                          ) : (
+                            <span>{rec.checkIn}</span>
+                          )
                         ) : "—"}
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: "#94a3b8" }}>
                         {rec?.checkOut ? (
-                          <input type="time" value={rec.checkOut} onChange={e => setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkOut: e.target.value } : a))} style={{ width: 100, padding: "4px 8px" }} />
+                          canMark ? (
+                            <input type="time" value={rec.checkOut} onChange={e => setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkOut: e.target.value } : a))} style={{ width: 100, padding: "4px 8px" }} />
+                          ) : (
+                            <span>{rec.checkOut}</span>
+                          )
                         ) : rec?.checkIn ? <span style={{ color: "#f59e0b" }}>In office</span> : "—"}
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: hours >= 8 ? "#10b981" : hours > 0 ? "#f59e0b" : "#64748b" }}>
                         {hours > 0 ? `${hours.toFixed(1)}h` : "—"}
                       </td>
                       <td>
-                        {!isOnLeave && (
-                          <div style={{ display: "flex", gap: 4 }}>
-                            {!rec?.checkIn && <button className="btn btn-primary" style={{ padding: "4px 10px", fontSize: 11 }} onClick={() => checkIn(eng.id)}>Check In</button>}
-                            {rec?.checkIn && !rec?.checkOut && <button className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 11 }} onClick={() => checkOut(eng.id)}>Check Out</button>}
-                            {rec?.type !== "absent" && <button className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 11, color: "#ef4444" }} onClick={() => markAbsent(eng.id)}>Absent</button>}
-                          </div>
+                        {canMark ? (
+                          <>
+                            {!isOnLeave && (
+                              <div style={{ display: "flex", gap: 4 }}>
+                                {!rec?.checkIn && <button className="btn btn-primary" style={{ padding: "4px 10px", fontSize: 11 }} onClick={() => checkIn(eng.id)}>Check In</button>}
+                                {rec?.checkIn && !rec?.checkOut && <button className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 11 }} onClick={() => checkOut(eng.id)}>Check Out</button>}
+                                {rec?.type !== "absent" && <button className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 11, color: "#ef4444" }} onClick={() => markAbsent(eng.id)}>Absent</button>}
+                              </div>
+                            )}
+                            {isOnLeave && <span style={{ fontSize: 12, color: "#f59e0b" }}>On approved leave</span>}
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 12, color: "#64748b" }}>Read-only</span>
                         )}
-                        {isOnLeave && <span style={{ fontSize: 12, color: "#f59e0b" }}>On approved leave</span>}
                       </td>
                     </tr>
                   );
@@ -2076,7 +2093,7 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
                   <th>Leave Days</th>
                   <th>Total Hours</th>
                   <th>Attendance %</th>
-                  <th>Est. Cost (₹)</th>
+                  {can(role, "viewFinancials") && <th>Est. Cost (₹)</th>}
                 </tr>
               </thead>
               <tbody>
@@ -2102,7 +2119,7 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
                           <span style={{ fontSize: 12, color: attPct >= 90 ? "#10b981" : attPct >= 75 ? "#f59e0b" : "#ef4444" }}>{attPct}%</span>
                         </div>
                       </td>
-                      <td style={{ fontFamily: "DM Mono", fontSize: 12 }}>{fmt(cost)}</td>
+                      {can(role, "viewFinancials") && <td style={{ fontFamily: "DM Mono", fontSize: 12 }}>{fmt(cost)}</td>}
                     </tr>
                   );
                 })}
@@ -2125,7 +2142,7 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
               const count = leaves.filter(l =>
                 l.type === type &&
                 l.status === "approved" &&
-                (role !== "operator" || l.engineerId === currentUser.engineerId)
+                (canMark || l.engineerId === currentUser.engineerId)
               ).length;
               return (
                 <div key={type} className="stat-card" style={{ padding: "14px 16px" }}>
@@ -2147,7 +2164,7 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
               </thead>
               <tbody>
                 {[...leaves].sort((a, b) => b.startDate.localeCompare(a.startDate))
-                  .filter(l => role === "operator" ? l.engineerId === currentUser.engineerId : true)
+                  .filter(l => canMark ? true : l.engineerId === currentUser.engineerId)
                   .map(l => {
                   const eng = engineers.find(e => e.id === l.engineerId);
                   const days = Math.ceil((new Date(l.endDate) - new Date(l.startDate)) / 86400000) + 1;
@@ -2190,7 +2207,7 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
             <div className="modal-bg">
               <div className="modal">
                 <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 20 }}>{editingLeave ? "Edit Leave" : "Apply Leave"}</div>
-                <LeaveForm leave={editingLeave} engineers={engineers.filter(e => e.active)} onSave={handleLeafSave} onClose={() => { setShowLeaveForm(false); setEditingLeave(null); }} />
+                <LeaveForm leave={editingLeave} engineers={engineers.filter(e => e.active)} onSave={handleLeafSave} onClose={() => { setShowLeaveForm(false); setEditingLeave(null); }} currentUser={currentUser} canSeeAll={canMark} />
               </div>
             </div>
           )}
@@ -2200,18 +2217,25 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
   );
 }
 
-function LeaveForm({ leave, engineers, onSave, onClose }) {
-  const [d, setD] = useState(leave || { engineerId: "", type: "casual", startDate: "", endDate: "", reason: "" });
+function LeaveForm({ leave, engineers, onSave, onClose, currentUser, canSeeAll }) {
+  const [d, setD] = useState(leave || { engineerId: canSeeAll ? "" : currentUser.engineerId, type: "casual", startDate: "", endDate: "", reason: "" });
   const set = (k, v) => setD(p => ({ ...p, [k]: v }));
   return (
     <>
-      <div className="form-row">
-        <label>Engineer</label>
-        <select value={d.engineerId} onChange={e => set("engineerId", e.target.value)}>
-          <option value="">Select engineer</option>
-          {engineers.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-        </select>
-      </div>
+      {canSeeAll ? (
+        <div className="form-row">
+          <label>Engineer</label>
+          <select value={d.engineerId} onChange={e => set("engineerId", e.target.value)}>
+            <option value="">Select engineer</option>
+            {engineers.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </div>
+      ) : (
+        <div className="form-row">
+          <label>Engineer</label>
+          <input type="text" value={currentUser.name} disabled style={{ opacity: 0.8 }} />
+        </div>
+      )}
       <div className="form-row">
         <label>Leave Type</label>
         <select value={d.type} onChange={e => set("type", e.target.value)}>
