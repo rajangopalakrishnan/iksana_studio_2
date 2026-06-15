@@ -2032,20 +2032,12 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: "#94a3b8" }}>
                         {rec?.checkIn ? (
-                          canMark ? (
-                            <input type="time" value={rec.checkIn} onChange={e => setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkIn: e.target.value } : a))} style={{ width: 100, padding: "4px 8px" }} />
-                          ) : (
-                            <span>{rec.checkIn}</span>
-                          )
+                          <span>{rec.checkIn}</span>
                         ) : "—"}
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: "#94a3b8" }}>
                         {rec?.checkOut ? (
-                          canMark ? (
-                            <input type="time" value={rec.checkOut} onChange={e => setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkOut: e.target.value } : a))} style={{ width: 100, padding: "4px 8px" }} />
-                          ) : (
-                            <span>{rec.checkOut}</span>
-                          )
+                          <span>{rec.checkOut}</span>
                         ) : rec?.checkIn ? <span style={{ color: "#f59e0b" }}>In office</span> : "—"}
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: hours >= 8 ? "#10b981" : hours > 0 ? "#f59e0b" : "#64748b" }}>
