@@ -1369,7 +1369,7 @@ function Engineers({ engineers, tasks, setEngineers, showToast, role, users, set
 function EngineerForm({ engineer, onSave, onClose }) {
   const [d, setD] = useState(engineer || { name:"", email:"", phone:"", role:"", location:"office", rate:"" });
   const set = (k,v) => setD(p=>({...p,[k]:v}));
-  const ROLES = ["BIM Manager","Senior Architect","BIM Coordinator","Interior Designer","Revit Modeller","QS Estimator","Drafting Engineer","4D Planner","Manager Pre-contracts","Lead Estimator","Estimator"];
+  const ROLES = ["BIM Manager","Senior Architect","BIM Coordinator","Interior Designer","Revit Modeller","QS Estimator","Drafting Engineer","4D Planner","Manager Pre-contracts","Lead Estimator","Estimator", "Lead BIM Specialist", "Director", "Sr.Tech-Designer", "CAD Mid Level", "CAD-Junior Level"];
   return (
     <>
       <div className="form-row"><label>Full Name</label><input value={d.name} onChange={e=>set("name",e.target.value)} placeholder="e.g. Rahul Sharma" /></div>
