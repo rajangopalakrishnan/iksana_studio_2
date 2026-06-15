@@ -49,7 +49,7 @@ const SEED_USERS_PLAIN = [
   { id:"u10",name:"Anjitha",            email:"anjitha@iksana.tech",   role:"operator", engineerId:"e10",password:"Iksana@2025", mustChange:true  },
   { id:"u12",name:"Shivram Nallepilly",  email:"shivram.nv@iksana.tech", role:"manager",  engineerId:"e12",password:"Iksana@2025", mustChange:true  },
   { id:"u13",name:"Janani Jayaraman",    email:"janani.j@iksana.tech",   role:"operator", engineerId:"e13",password:"Iksana@2025", mustChange:true  },
-  { id:"u14",name:"K Achyuth Menon",     email:"achyuth.m@iksana.tech",  role:"operator", engineerId:"e14",password:"Iksana@2025", mustChange:true  },
+  { id:"u14",name:"K Achyuth Menon",     email:"achyuth.k@iksana.tech",  role:"operator", engineerId:"e14",password:"Iksana@2025", mustChange:true  },
 ];
 
 async function initUsers(stored) {
@@ -260,7 +260,7 @@ const SEED_ENGINEERS = [
   { id: "e10", name: "Anjitha",            email: "anjitha@iksana.tech",   role: "CAD-Junior Level",   location: "office", rate: 450, active: true },
   { id: "e12", name: "Shivram Nallepilly", email: "shivram.nv@iksana.tech", role: "Lead Estimator", location: "office", rate: 850, active: true },
   { id: "e13", name: "Janani Jayaraman",    email: "janani.j@iksana.tech",   role: "Estimator",      location: "office", rate: 650, active: true },
-  { id: "e14", name: "K Achyuth Menon",     email: "achyuth.m@iksana.tech",  role: "CAD Mid Level",  location: "office", rate: 650, active: true },
+  { id: "e14", name: "K Achyuth Menon",     email: "achyuth.k@iksana.tech",  role: "CAD Mid Level",  location: "office", rate: 650, active: true },
 ];
 
 const SEED_PROJECTS = [];
