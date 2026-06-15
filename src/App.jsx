@@ -49,6 +49,7 @@ const SEED_USERS_PLAIN = [
   { id:"u10",name:"Anjitha",            email:"anjitha@iksana.tech",   role:"operator", engineerId:"e10",password:"Iksana@2025", mustChange:true  },
   { id:"u12",name:"Shivram Nallepilly",  email:"shivram.nv@iksana.tech", role:"manager",  engineerId:"e12",password:"Iksana@2025", mustChange:true  },
   { id:"u13",name:"Janani Jayaraman",    email:"janani.j@iksana.tech",   role:"operator", engineerId:"e13",password:"Iksana@2025", mustChange:true  },
+  { id:"u14",name:"K Achyuth Menon",     email:"achyuth.m@iksana.tech",  role:"operator", engineerId:"e14",password:"Iksana@2025", mustChange:true  },
 ];
 
 async function initUsers(stored) {
@@ -259,6 +260,7 @@ const SEED_ENGINEERS = [
   { id: "e10", name: "Anjitha",            email: "anjitha@iksana.tech",   role: "CAD-Junior Level",   location: "office", rate: 450, active: true },
   { id: "e12", name: "Shivram Nallepilly", email: "shivram.nv@iksana.tech", role: "Lead Estimator", location: "office", rate: 850, active: true },
   { id: "e13", name: "Janani Jayaraman",    email: "janani.j@iksana.tech",   role: "Estimator",      location: "office", rate: 650, active: true },
+  { id: "e14", name: "K Achyuth Menon",     email: "achyuth.m@iksana.tech",  role: "CAD Mid Level",  location: "office", rate: 650, active: true },
 ];
 
 const SEED_PROJECTS = [];
@@ -2050,13 +2052,13 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
                         {hours > 0 ? `${hours.toFixed(1)}h` : "—"}
                       </td>
                       <td>
-                        {canMark ? (
+                        {(canMark || eng.id === currentUser?.engineerId) ? (
                           <>
                             {!isOnLeave && (
                               <div style={{ display: "flex", gap: 4 }}>
                                 {!rec?.checkIn && <button className="btn btn-primary" style={{ padding: "4px 10px", fontSize: 11 }} onClick={() => checkIn(eng.id)}>Check In</button>}
                                 {rec?.checkIn && !rec?.checkOut && <button className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 11 }} onClick={() => checkOut(eng.id)}>Check Out</button>}
-                                {rec?.type !== "absent" && <button className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 11, color: "#ef4444" }} onClick={() => markAbsent(eng.id)}>Absent</button>}
+                                {canMark && rec?.type !== "absent" && <button className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: 11, color: "#ef4444" }} onClick={() => markAbsent(eng.id)}>Absent</button>}
                               </div>
                             )}
                             {isOnLeave && <span style={{ fontSize: 12, color: "#f59e0b" }}>On approved leave</span>}
