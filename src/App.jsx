@@ -2032,13 +2032,36 @@ function Attendance({ engineers, attendance, leaves, setAttendance, setLeaves, s
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: "#94a3b8" }}>
                         {rec?.checkIn ? (
-                          <span>{rec.checkIn}</span>
+                          canMark ? (
+                            <input type="time" value={rec.checkIn} onChange={e => {
+                              setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkIn: e.target.value } : a));
+                            }} style={{ background: "transparent", color: "inherit", border: "1px solid #334155", borderRadius: 4, padding: "2px 4px", fontSize: 13, fontFamily: "inherit" }} />
+                          ) : (
+                            <span>{rec.checkIn}</span>
+                          )
                         ) : "—"}
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: "#94a3b8" }}>
                         {rec?.checkOut ? (
-                          <span>{rec.checkOut}</span>
-                        ) : rec?.checkIn ? <span style={{ color: "#f59e0b" }}>In office</span> : "—"}
+                          canMark ? (
+                            <input type="time" value={rec.checkOut} onChange={e => {
+                              setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkOut: e.target.value } : a));
+                            }} style={{ background: "transparent", color: "inherit", border: "1px solid #334155", borderRadius: 4, padding: "2px 4px", fontSize: 13, fontFamily: "inherit" }} />
+                          ) : (
+                            <span>{rec.checkOut}</span>
+                          )
+                        ) : rec?.checkIn ? (
+                          canMark ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                              <span style={{ color: "#f59e0b", fontSize: 11 }}>In office</span>
+                              <input type="time" onChange={e => {
+                                setAttendance(attendance.map(a => a.id === rec.id ? { ...a, checkOut: e.target.value } : a));
+                              }} style={{ background: "transparent", color: "inherit", border: "1px solid #334155", borderRadius: 4, padding: "2px 4px", fontSize: 13, fontFamily: "inherit" }} />
+                            </div>
+                          ) : (
+                            <span style={{ color: "#f59e0b" }}>In office</span>
+                          )
+                        ) : "—"}
                       </td>
                       <td style={{ fontFamily: "DM Mono", fontSize: 13, color: hours >= 8 ? "#10b981" : hours > 0 ? "#f59e0b" : "#64748b" }}>
                         {hours > 0 ? `${hours.toFixed(1)}h` : "—"}
