@@ -53,11 +53,11 @@ const SEED_USERS_PLAIN = [
 ];
 
 async function initUsers(stored) {
-  // If already hashed (no password field), return as-is
-  if (stored && stored.length > 0 && !stored[0].password) return stored;
-  const source = (stored && stored.length > 0 && stored[0].password) ? stored : SEED_USERS_PLAIN;
+  // If nothing stored, seed from defaults
+  const source = (stored && stored.length > 0) ? stored : SEED_USERS_PLAIN;
+  // Process each user individually: only hash those that still have a plaintext `password` field
   return Promise.all(source.map(async u => {
-    if (u.passwordHash) return u; // already hashed
+    if (!u.password) return u; // already hashed — keep as-is (preserves changed passwords)
     const { password, ...rest } = u;
     return { ...rest, passwordHash: await hashPassword(password) };
   }));
@@ -3096,71 +3096,103 @@ function UserForm({ user, engineers, onSave, onClose }) {
   );
 }
 
-function Import({ engineers, projects, tasks, setTasks, showToast }) {
-  const [file, setFile] = useState(null);
+function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }) {
   const [preview, setPreview] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [fileLog, setFileLog] = useState([]);   // per-file status
+  const [dragging, setDragging] = useState(false);
   const [importFiles, setImportFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
 
   const downloadTemplate = async () => {
     try {
-      console.log("Generating template...");
       const data = [
         ["Title", "Project ID", "Discipline", "Priority", "Estimated Hours", "Due Date (YYYY-MM-DD)", "Assignee Email (Optional)"],
-        ["Sample Task 1", projects[0]?.id || "proj-1", "BIM", "medium", 12, "2025-12-31", engineers[0]?.email || ""],
+        [projects[0]?.id ? "Sample Task 1" : "Sample Task 1", projects[0]?.id || "proj-1", "BIM", "medium", 12, "2025-12-31", engineers[0]?.email || ""],
         ["Sample Task 2", projects[0]?.id || "proj-1", "Architecture", "high", 8, "2025-12-31", ""],
       ];
       await xlsxDownload([{ name: "Task Template", data, colWidths: [30, 15, 15, 10, 15, 20, 25] }], "iksana-task-template.xlsx");
       showToast("Template downloaded");
     } catch (e) {
-      console.error("Template Error:", e);
-      showToast("Download failed - see console", "error");
+      showToast("Download failed", "error");
     }
   };
 
-  const handleFileChange = async (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    console.log("Parsing file:", f.name);
-    setLoading(true);
-    try {
-      const XLSX = await loadXLSX();
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const bstr = evt.target.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        
-        // Parse rows (skip header)
-        const rows = data.slice(1).filter(r => r[0]).map(r => {
-          const eng = engineers.find(e => e.email === r[6]);
+  const processFiles = async (files) => {
+    const log = [];
+    const allRows = [];
+
+    for (const f of files) {
+      const isXlsx = f.name.endsWith(".xlsx") || f.name.endsWith(".xls");
+      const isCSV  = f.name.endsWith(".csv");
+      if (!isXlsx && !isCSV) {
+        log.push({ name: f.name, status: "error", msg: "Unsupported — use .xlsx or .csv" });
+        continue;
+      }
+      try {
+        const XLSX = await loadXLSX();
+        let data = [];
+        if (isXlsx) {
+          const buf = await f.arrayBuffer();
+          const wb = XLSX.read(buf, { type: "array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+        } else {
+          const text = await f.text();
+          data = text.split(/\r?\n/).filter(l => l.trim()).map(l => {
+            const vals = []; let cur = ""; let inQ = false;
+            for (let i = 0; i < l.length; i++) {
+              if (l[i] === '"') { inQ = !inQ; }
+              else if (l[i] === ',' && !inQ) { vals.push(cur.trim()); cur = ""; }
+              else { cur += l[i]; }
+            }
+            vals.push(cur.trim()); return vals;
+          });
+        }
+        if (data.length < 2) {
+          log.push({ name: f.name, status: "error", msg: "Empty or header-only file" });
+          continue;
+        }
+        const rows = data.slice(1).filter(r => r[0]?.toString().trim()).map(r => {
+          const eng = engineers.find(e => e.email === r[6]?.toString().trim());
+          const isAdmin = currentUser?.role === "admin" || currentUser?.role === "manager";
           return {
             id: "t" + uid(),
-            title: r[0],
-            projectId: r[1],
-            discipline: r[2] || "BIM",
-            priority: (r[3] || "medium").toLowerCase(),
+            title: r[0]?.toString().trim() || "",
+            projectId: r[1]?.toString().trim() || "",
+            discipline: r[2]?.toString().trim() || "BIM",
+            priority: (r[3]?.toString().trim() || "medium").toLowerCase(),
             estimatedHours: Number(r[4]) || 0,
             loggedHours: 0,
-            dueDate: r[5],
-            assignee: eng ? eng.id : "",
+            dueDate: r[5]?.toString().trim() || "",
+            assignee: isAdmin ? (eng ? eng.id : "") : (currentUser?.engineerId || ""),
             status: "not-started",
-            attachments: (importFiles || []).map(f => ({ name: f.name, type: f.name.split(".").pop().toLowerCase(), path: f.path })),
-            createdAt: new Date().toISOString().slice(0, 10)
+            attachments: [],
+            createdAt: new Date().toISOString().slice(0, 10),
           };
         });
-        setPreview(rows);
-      };
-      reader.readAsBinaryString(f);
-      setFile(f);
-    } catch (e) {
-      console.error(e);
-      showToast("Error parsing file", "error");
+        allRows.push(...rows);
+        log.push({ name: f.name, status: "ok", msg: `${rows.length} task(s) ready` });
+      } catch (err) {
+        console.error("Import parse error:", err);
+        log.push({ name: f.name, status: "error", msg: "Could not parse file" });
+      }
     }
-    setLoading(false);
+
+    setFileLog(prev => [...prev, ...log]);
+    if (allRows.length > 0) setPreview(prev => [...prev, ...allRows]);
+    else if (log.every(l => l.status === "error")) showToast("No valid tasks found in selected files", "error");
+  };
+
+  const onFileInput = async (e) => {
+    const files = Array.from(e.target.files);
+    e.target.value = "";
+    if (files.length > 0) await processFiles(files);
+  };
+
+  const onDrop = async (e) => {
+    e.preventDefault(); setDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) await processFiles(files);
   };
 
   const handleBulkAttach = async (e) => {
@@ -3174,85 +3206,128 @@ function Import({ engineers, projects, tasks, setTasks, showToast }) {
     }
     setImportFiles(prev => [...prev, ...results]);
     setUploading(false);
-    showToast(`${results.length} files prepared for import batch`);
+    showToast(`${results.length} support files attached`);
   };
 
   const commitImport = async () => {
-    const updated = [...tasks, ...preview];
+    const withAttachments = preview.map(t => ({ ...t, attachments: importFiles }));
+    const updated = [...tasks, ...withAttachments];
     await save(KEYS.tasks, updated);
     setTasks(updated);
     showToast(`${preview.length} tasks imported successfully`);
-    setPreview([]);
-    setFile(null);
-    setImportFiles([]);
+    setPreview([]); setFileLog([]); setImportFiles([]);
   };
 
   return (
     <div>
-      <PageHeader title="Import Tasks" sub="Bulk create tasks from Excel" />
-      
-      <div className="card" style={{ marginBottom: 24, background:"#111827" }}>
-        <div style={{ fontSize:15, fontWeight:600, marginBottom:10 }}>Bulk Import Tasks</div>
-        <p style={{ fontSize:13, color:"#94a3b8", marginBottom:20 }}>
-          Upload an Excel (.xlsx) or CSV file with your task data. 
-          <br/><span style={{ fontSize:11, color:"#64748b" }}>Required columns: Title, Project ID, Discipline, Priority, Estimated Hours, Due Date (YYYY-MM-DD)</span>
+      <PageHeader title="Import Tasks" sub="Bulk create tasks from Excel or CSV — upload as many files as you need" />
+
+      <div className="card" style={{ marginBottom: 24, background: "#111827" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>Bulk Import Tasks</div>
+          <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={downloadTemplate}>⬇ Download Template</button>
+        </div>
+        <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>
+          Upload any number of <strong style={{ color: "#818cf8" }}>.xlsx or .csv</strong> files at once — all tasks are merged into one preview before importing.
+          <br /><span style={{ fontSize: 11, color: "#64748b" }}>Columns: Title, Project ID, Discipline, Priority, Estimated Hours, Due Date, Assignee Email</span>
         </p>
-        
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-          <div style={{ padding:16, background:"#0c0e14", borderRadius:12, border:"1px dashed #374151" }}>
-            <div style={{ fontSize:13, fontWeight:600, marginBottom:12 }}>1. Select Data File</div>
-            <label className="btn btn-primary" style={{ cursor:"pointer", width:"100%", justifyContent:"center" }}>
-              {file ? `✓ ${file.name}` : "📁 Choose Excel/CSV"}
-              <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} style={{ display:"none" }} />
-            </label>
+
+        {/* Drop zone */}
+        <div
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          onClick={() => document.getElementById("import-multi-input").click()}
+          style={{
+            border: `2px dashed ${dragging ? "#6366f1" : "#374151"}`,
+            borderRadius: 12, padding: "36px 20px", textAlign: "center",
+            cursor: "pointer", background: dragging ? "#6366f110" : "#0c0e14",
+            transition: "all 0.2s", marginBottom: 16,
+          }}
+        >
+          <div style={{ fontSize: 32, marginBottom: 8 }}>📂</div>
+          <div style={{ fontSize: 14, color: "#94a3b8", fontWeight: 600 }}>
+            {dragging ? "Drop files here!" : "Click or drag & drop files here"}
           </div>
-          
-          <div style={{ padding:16, background:"#0c0e14", borderRadius:12, border:"1px dashed #374151" }}>
-            <div style={{ fontSize:13, fontWeight:600, marginBottom:12 }}>2. Attach Support Files (Optional)</div>
-            <label className="btn btn-ghost" style={{ cursor:"pointer", width:"100%", justifyContent:"center" }}>
-              {uploading ? "⌛ Uploading..." : "📁 Attach DWG/PDF"}
-              <input type="file" multiple onChange={handleBulkAttach} style={{ display:"none" }} disabled={uploading} />
-            </label>
-            {importFiles.length > 0 && (
-              <div style={{ marginTop:10, display:"flex", flexWrap:"wrap", gap:5 }}>
-                {importFiles.map((f, i) => (
-                  <div key={i} className="tag" style={{ fontSize:10 }}>{f.name}</div>
-                ))}
-              </div>
-            )}
+          <div style={{ fontSize: 12, color: "#4a5568", marginTop: 4 }}>
+            Supports .xlsx and .csv — <strong style={{ color: "#818cf8" }}>no limit on number of files</strong>
           </div>
+          <input id="import-multi-input" type="file" accept=".xlsx,.xls,.csv" multiple onChange={onFileInput} style={{ display: "none" }} />
+        </div>
+
+        {/* Attach support files */}
+        <div style={{ padding: 14, background: "#0c0e14", borderRadius: 10, border: "1px dashed #374151" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Attach Support Files (Optional)</div>
+          <label className="btn btn-ghost" style={{ cursor: "pointer", justifyContent: "center", width: "100%" }}>
+            {uploading ? "⌛ Uploading..." : "📁 Attach DWG/PDF files"}
+            <input type="file" multiple onChange={handleBulkAttach} style={{ display: "none" }} disabled={uploading} />
+          </label>
+          {importFiles.length > 0 && (
+            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 5 }}>
+              {importFiles.map((f, i) => <div key={i} className="tag" style={{ fontSize: 10 }}>{f.name}</div>)}
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Per-file status log */}
+      {fileLog.length > 0 && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>File Results</div>
+            <button className="btn btn-ghost" style={{ fontSize: 11, padding: "2px 8px" }} onClick={() => { setFileLog([]); setPreview([]); }}>Clear All</button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {fileLog.map((r, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                background: "#1a1d27", borderRadius: 8, padding: "8px 12px",
+                borderLeft: `3px solid ${r.status === "ok" ? "#10b981" : "#ef4444"}`
+              }}>
+                <span>{r.status === "ok" ? "✅" : "❌"}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, color: "#e2e8f0", fontWeight: 500 }}>{r.name}</div>
+                  <div style={{ fontSize: 11, color: r.status === "ok" ? "#10b981" : "#ef4444" }}>{r.msg}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Preview table */}
       {preview.length > 0 && (
         <div className="card">
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-            <div style={{ fontSize:15, fontWeight:600 }}>Preview: {preview.length} Tasks Found</div>
-            <div style={{ display:"flex", gap:10 }}>
-              <button className="btn btn-primary" onClick={commitImport}>Import All Tasks</button>
-              <button className="btn btn-ghost" onClick={() => { setPreview([]); setFile(null); }}>Cancel</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>Preview: {preview.length} Tasks Ready to Import</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn-primary" onClick={commitImport}>Import All {preview.length} Tasks</button>
+              <button className="btn btn-ghost" onClick={() => { setPreview([]); setFileLog([]); }}>Cancel</button>
             </div>
           </div>
-          <table style={{ fontSize:12 }}>
-            <thead><tr><th>Title</th><th>Project</th><th>Discipline</th><th>Assignee</th><th>Est. Hrs</th><th>Due</th></tr></thead>
-            <tbody>
-              {preview.map((t, i) => (
-                <tr key={i}>
-                  <td>{t.title}</td>
-                  <td>{t.projectId}</td>
-                  <td>{t.discipline}</td>
-                  <td>{engineers.find(e => e.id === t.assignee)?.name || "—"}</td>
-                  <td>{t.estimatedHours}h</td>
-                  <td>{fmtDate(t.dueDate)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div style={{ maxHeight: 360, overflowY: "auto" }}>
+            <table style={{ fontSize: 12 }}>
+              <thead><tr><th>Title</th><th>Project</th><th>Discipline</th><th>Assignee</th><th>Est. Hrs</th><th>Due</th></tr></thead>
+              <tbody>
+                {preview.map((t, i) => (
+                  <tr key={i}>
+                    <td>{t.title}</td>
+                    <td>{projects.find(p => p.id === t.projectId)?.name || t.projectId || "—"}</td>
+                    <td>{t.discipline}</td>
+                    <td>{engineers.find(e => e.id === t.assignee)?.name || "—"}</td>
+                    <td>{t.estimatedHours}h</td>
+                    <td>{fmtDate(t.dueDate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
 
 function PageHeader({ title, sub, action }) {
   return (
