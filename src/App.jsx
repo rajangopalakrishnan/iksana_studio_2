@@ -3106,11 +3106,20 @@ function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }
   const downloadTemplate = async () => {
     try {
       const data = [
-        ["Title", "Project ID", "Discipline", "Priority", "Estimated Hours", "Due Date (YYYY-MM-DD)", "Assignee Email (Optional)"],
-        [projects[0]?.id ? "Sample Task 1" : "Sample Task 1", projects[0]?.id || "proj-1", "BIM", "medium", 12, "2025-12-31", engineers[0]?.email || ""],
-        ["Sample Task 2", projects[0]?.id || "proj-1", "Architecture", "high", 8, "2025-12-31", ""],
+        ["Title", "Project Name or ID", "Discipline", "Priority", "Estimated Hours", "Due Date (YYYY-MM-DD)", "Assignee Name or Email"],
+        [
+          "Sample Task 1",
+          projects[0]?.name || projects[0]?.id || "My Project",
+          "BIM", "medium", 12, "2025-12-31",
+          engineers[0]?.name || engineers[0]?.email || ""
+        ],
+        [
+          "Sample Task 2",
+          projects[0]?.name || projects[0]?.id || "My Project",
+          "Architecture", "high", 8, "2025-12-31", ""
+        ],
       ];
-      await xlsxDownload([{ name: "Task Template", data, colWidths: [30, 15, 15, 10, 15, 20, 25] }], "iksana-task-template.xlsx");
+      await xlsxDownload([{ name: "Task Template", data, colWidths: [30, 22, 15, 10, 15, 22, 28] }], "iksana-task-template.xlsx");
       showToast("Template downloaded");
     } catch (e) {
       showToast("Download failed", "error");
@@ -3153,21 +3162,41 @@ function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }
           continue;
         }
         const rows = data.slice(1).filter(r => r[0]?.toString().trim()).map(r => {
-          const eng = engineers.find(e => e.email === r[6]?.toString().trim());
+          const rawProject = r[1]?.toString().trim() || "";
+          const rawAssignee = r[6]?.toString().trim() || "";
+
+          // Resolve project: match by ID first, then by name (case-insensitive)
+          const resolvedProject = projects.find(p =>
+            p.id === rawProject ||
+            p.name?.toLowerCase() === rawProject.toLowerCase()
+          );
+
+          // Resolve assignee: match by email first, then by name (case-insensitive)
+          const resolvedEng = engineers.find(e =>
+            e.email?.toLowerCase() === rawAssignee.toLowerCase() ||
+            e.name?.toLowerCase() === rawAssignee.toLowerCase()
+          );
+
           const isAdmin = currentUser?.role === "admin" || currentUser?.role === "manager";
           return {
             id: "t" + uid(),
             title: r[0]?.toString().trim() || "",
-            projectId: r[1]?.toString().trim() || "",
+            projectId: resolvedProject ? resolvedProject.id : rawProject,
             discipline: r[2]?.toString().trim() || "BIM",
             priority: (r[3]?.toString().trim() || "medium").toLowerCase(),
             estimatedHours: Number(r[4]) || 0,
             loggedHours: 0,
             dueDate: r[5]?.toString().trim() || "",
-            assignee: isAdmin ? (eng ? eng.id : "") : (currentUser?.engineerId || ""),
+            assignee: isAdmin
+              ? (resolvedEng ? resolvedEng.id : "")
+              : (currentUser?.engineerId || ""),
             status: "not-started",
             attachments: [],
             createdAt: new Date().toISOString().slice(0, 10),
+            _rawProject: rawProject,           // kept for preview display
+            _rawAssignee: rawAssignee,         // kept for preview display
+            _projectResolved: !!resolvedProject,
+            _assigneeResolved: !!resolvedEng || !rawAssignee,
           };
         });
         allRows.push(...rows);
@@ -3210,8 +3239,12 @@ function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }
   };
 
   const commitImport = async () => {
-    const withAttachments = preview.map(t => ({ ...t, attachments: importFiles }));
-    const updated = [...tasks, ...withAttachments];
+    // Strip internal _raw* helper fields before saving
+    const cleanTasks = preview.map(({ _rawProject, _rawAssignee, _projectResolved, _assigneeResolved, ...t }) => ({
+      ...t,
+      attachments: importFiles,
+    }));
+    const updated = [...tasks, ...cleanTasks];
     await save(KEYS.tasks, updated);
     setTasks(updated);
     showToast(`${preview.length} tasks imported successfully`);
@@ -3229,7 +3262,7 @@ function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }
         </div>
         <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>
           Upload any number of <strong style={{ color: "#818cf8" }}>.xlsx or .csv</strong> files at once — all tasks are merged into one preview before importing.
-          <br /><span style={{ fontSize: 11, color: "#64748b" }}>Columns: Title, Project ID, Discipline, Priority, Estimated Hours, Due Date, Assignee Email</span>
+          <br /><span style={{ fontSize: 11, color: "#64748b" }}>Columns: Title, <strong style={{color:"#818cf8"}}>Project Name or ID</strong>, Discipline, Priority, Est. Hours, Due Date (YYYY-MM-DD), <strong style={{color:"#818cf8"}}>Assignee Name or Email</strong></span>
         </p>
 
         {/* Drop zone */}
@@ -3305,20 +3338,38 @@ function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }
               <button className="btn btn-ghost" onClick={() => { setPreview([]); setFileLog([]); }}>Cancel</button>
             </div>
           </div>
+          {preview.some(t => !t._projectResolved && t._rawProject) && (
+            <div style={{ fontSize: 12, color: "#f59e0b", background: "#f59e0b10", border: "1px solid #f59e0b30", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+              ⚠ Some tasks have unmatched projects (shown in orange). They will be imported without a project link unless you correct the project name in your file.
+            </div>
+          )}
+          {preview.some(t => !t._assigneeResolved && t._rawAssignee) && (
+            <div style={{ fontSize: 12, color: "#f59e0b", background: "#f59e0b10", border: "1px solid #f59e0b30", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>
+              ⚠ Some assignees could not be matched (shown in orange). Tasks will be imported without an assignee.
+            </div>
+          )}
           <div style={{ maxHeight: 360, overflowY: "auto" }}>
             <table style={{ fontSize: 12 }}>
               <thead><tr><th>Title</th><th>Project</th><th>Discipline</th><th>Assignee</th><th>Est. Hrs</th><th>Due</th></tr></thead>
               <tbody>
-                {preview.map((t, i) => (
-                  <tr key={i}>
-                    <td>{t.title}</td>
-                    <td>{projects.find(p => p.id === t.projectId)?.name || t.projectId || "—"}</td>
-                    <td>{t.discipline}</td>
-                    <td>{engineers.find(e => e.id === t.assignee)?.name || "—"}</td>
-                    <td>{t.estimatedHours}h</td>
-                    <td>{fmtDate(t.dueDate)}</td>
-                  </tr>
-                ))}
+                {preview.map((t, i) => {
+                  const projName = projects.find(p => p.id === t.projectId)?.name;
+                  const engName  = engineers.find(e => e.id === t.assignee)?.name;
+                  return (
+                    <tr key={i}>
+                      <td>{t.title}</td>
+                      <td style={{ color: !t._projectResolved && t._rawProject ? "#f59e0b" : undefined }}>
+                        {projName || (t._rawProject ? `⚠ ${t._rawProject}` : "—")}
+                      </td>
+                      <td>{t.discipline}</td>
+                      <td style={{ color: !t._assigneeResolved && t._rawAssignee ? "#f59e0b" : undefined }}>
+                        {engName || (t._rawAssignee ? `⚠ ${t._rawAssignee}` : "—")}
+                      </td>
+                      <td>{t.estimatedHours}h</td>
+                      <td>{fmtDate(t.dueDate)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
