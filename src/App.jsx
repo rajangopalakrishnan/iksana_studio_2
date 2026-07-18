@@ -629,7 +629,7 @@ export default function App() {
           {tab==="notifications" && <Notifications tasks={tasks} projects={projects} engineers={engineers} leaves={leaves} dismissed={dismissed} setDismissed={v=>persist(KEYS.dismissed,setDismissed,v)} setTab={setTab} emailCfg={emailCfg} onSendEmail={handleSendEmail} />}
           {tab==="export"        && <Export tasks={tasks} projects={projects} engineers={engineers} attendance={attendance} leaves={leaves} />}
           {tab==="import"        && <Import engineers={engineers} projects={projects} tasks={tasks} setTasks={v=>persist(KEYS.tasks,setTasks,v)} showToast={showToast} />}
-          {tab==="settings"      && <Settings users={users} setUsers={v=>persist(KEYS.users,setUsers,v)} emailCfg={emailCfg} setEmailCfg={v=>persist(KEYS.emailCfg,setEmailCfg,v)} auditLog={auditLog} showToast={showToast} currentUser={currentUser} engineers={engineers} addAudit={addAudit} onSendEmail={handleSendEmail} />}
+          {tab==="settings"      && <Settings users={users} setUsers={v=>persist(KEYS.users,setUsers,v)} setEngineers={v=>persist(KEYS.engineers,setEngineers,v)} emailCfg={emailCfg} setEmailCfg={v=>persist(KEYS.emailCfg,setEmailCfg,v)} auditLog={auditLog} showToast={showToast} currentUser={currentUser} engineers={engineers} addAudit={addAudit} onSendEmail={handleSendEmail} />}
         </div>
       </div>
 
@@ -1267,6 +1267,13 @@ function Engineers({ engineers, tasks, setEngineers, showToast, role, users, set
   const handleSave = (d) => {
     if (editing) {
       setEngineers(engineers.map(e => e.id === editing.id ? { ...editing, ...d } : e));
+      
+      // Auto-sync email and name to the linked user account to prevent login issues
+      const linkedUser = users?.find(u => u.engineerId === editing.id);
+      if (linkedUser && (linkedUser.email !== d.email || linkedUser.name !== d.name)) {
+        setUsers(users.map(u => u.id === linkedUser.id ? { ...u, email: d.email, name: d.name } : u));
+      }
+      
       showToast("Engineer updated");
     } else {
       setEngineers([...engineers, { id:"e"+uid(), ...d, active:true }]);
@@ -2817,7 +2824,7 @@ function Export({ tasks, projects, engineers, attendance, leaves }) {
 
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
-function Settings({ users, setUsers, emailCfg, setEmailCfg, auditLog, showToast, currentUser, engineers, addAudit, onSendEmail }) {
+function Settings({ users, setUsers, setEngineers, emailCfg, setEmailCfg, auditLog, showToast, currentUser, engineers, addAudit, onSendEmail }) {
   const [settingsTab, setSettingsTab] = useState("users");
   const [editUser, setEditUser] = useState(null);
   const [showUserForm, setShowUserForm] = useState(false);
@@ -2836,6 +2843,15 @@ function Settings({ users, setUsers, emailCfg, setEmailCfg, auditLog, showToast,
         finalUser.mustChange = true;
       }
       updated = users.map(u => u.id === editUser.id ? finalUser : u);
+      
+      // Auto-sync email and name to the linked engineer profile
+      if (finalUser.engineerId) {
+        const linkedEng = engineers.find(e => e.id === finalUser.engineerId);
+        if (linkedEng && (linkedEng.email !== finalUser.email || linkedEng.name !== finalUser.name)) {
+          setEngineers(engineers.map(e => e.id === finalUser.engineerId ? { ...e, email: finalUser.email, name: finalUser.name } : e));
+        }
+      }
+      
       showToast(password ? "User updated & password reset" : "User updated");
       await addAudit(currentUser, "USER_EDIT", `Edited user: ${data.name}${password ? " (Password Reset)":""}`);
     } else {
