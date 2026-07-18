@@ -279,7 +279,7 @@ const SEED_PRODUCTIVITY = {
 // ─── Utilities ───────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 9);
 const fmt = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
-const pct = (a, b) => b === 0 ? 0 : Math.round((a / b) * 100);
+const pct = (a, b) => Number(b) === 0 ? 0 : Math.round((Number(a) / Number(b)) * 100) || 0;
 const STATUS_COLOR = { "forecast": "#8b5cf6", "not-started": "#64748b", "in-progress": "#f59e0b", "completed": "#10b981", "on-hold": "#ef4444" };
 const PRIORITY_COLOR = { high: "#ef4444", medium: "#f59e0b", low: "#64748b" };
 const DISCIPLINES = ["BIM", "Architecture", "Interior", "QS", "4D", "Drafting"];
@@ -3106,7 +3106,7 @@ function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }
   const downloadTemplate = async () => {
     try {
       const data = [
-        ["Title", "Project Name or ID", "Discipline", "Priority", "Estimated Hours", "Due Date (YYYY-MM-DD)", "Assignee Name or Email"],
+        ["Title", "Project Name or ID", "Discipline", "Priority", "Estimated Hours", "Due Date (YYYY-MM-DD)", "AssigneeEmail"],
         [
           "Sample Task 1",
           projects[0]?.name || projects[0]?.id || "My Project",
@@ -3262,7 +3262,7 @@ function Import({ engineers, projects, tasks, setTasks, showToast, currentUser }
         </div>
         <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>
           Upload any number of <strong style={{ color: "#818cf8" }}>.xlsx or .csv</strong> files at once — all tasks are merged into one preview before importing.
-          <br /><span style={{ fontSize: 11, color: "#64748b" }}>Columns: Title, <strong style={{color:"#818cf8"}}>Project Name or ID</strong>, Discipline, Priority, Est. Hours, Due Date (YYYY-MM-DD), <strong style={{color:"#818cf8"}}>Assignee Name or Email</strong></span>
+          <br /><span style={{ fontSize: 11, color: "#64748b" }}>Columns: Title, <strong style={{color:"#818cf8"}}>Project Name or ID</strong>, Discipline, Priority, Est. Hours, Due Date (YYYY-MM-DD), <strong style={{color:"#818cf8"}}>AssigneeEmail</strong></span>
         </p>
 
         {/* Drop zone */}
