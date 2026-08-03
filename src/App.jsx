@@ -38,9 +38,9 @@ const SEED_USERS_PLAIN = [
   { id:"u0", name:"Admin Studio",        email:"admin@iksana.tech",   role:"admin",    engineerId:"e1", password:"Iksana26",    mustChange:false },
   { id:"u1", name:"Rajan Gopalakrishnan", email:"rg@iksana.tech",      role:"admin",    engineerId:"e1", password:"Admin@2025",  mustChange:false },
   { id:"u2", name:"Nisanth P",           email:"np@iksana.tech",      role:"admin",    engineerId:"e2", password:"Iksana@2025", mustChange:true  },
-  { id:"u3", name:"Baburaj",             email:"baburaj.tc@iksana.tech", role:"operator", engineerId:"e3", password:"Iksana@2025", mustChange:true  },
+  { id:"u3", name:"Baburaj",             email:"baburaj.tc@iksana.tech", role:"operator", engineerId:"e3", password:"Iksana@2025", mustChange:false },
   { id:"u11",name:"Biburaj",            email:"btp@iksana.tech",       role:"manager",  engineerId:"e11",password:"Iksana@2025", mustChange:true  },
-  { id:"u4", name:"Akheel",              email:"akheel.a@iksana.tech", role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:true  },
+  { id:"u4", name:"Akheel",              email:"akheel.a@iksana.tech", role:"operator", engineerId:"e4", password:"Iksana@2025", mustChange:false },
   { id:"u5", name:"Shaheeb",             email:"sheheeb.uk@iksana.tech", role:"operator", engineerId:"e5", password:"Iksana@2025", mustChange:true  },
   { id:"u6", name:"Devi Krishna",        email:"devikrishna.u@iksana.tech", role:"operator", engineerId:"e6", password:"Iksana@2025", mustChange:true  },
   { id:"u7", name:"Atheesh",             email:"athish.tm@iksana.tech", role:"operator", engineerId:"e7", password:"Iksana@2025", mustChange:true  },
@@ -359,6 +359,22 @@ export default function App() {
       if (targetRajan && targetRajan.passwordHash !== rajanHash) {
         targetRajan.passwordHash = rajanHash;
         targetRajan.mustChange = false;
+        await save(KEYS.users, initializedUsers);
+      }
+
+      // Safety Patch: Clear mustChange flag for Baburaj and Akheel
+      const targetBaburaj = initializedUsers.find(u => u.email.toLowerCase() === 'baburaj.tc@iksana.tech');
+      const targetAkheel = initializedUsers.find(u => u.email.toLowerCase() === 'akheel.a@iksana.tech');
+      let clearedMustChange = false;
+      if (targetBaburaj && targetBaburaj.mustChange) {
+        targetBaburaj.mustChange = false;
+        clearedMustChange = true;
+      }
+      if (targetAkheel && targetAkheel.mustChange) {
+        targetAkheel.mustChange = false;
+        clearedMustChange = true;
+      }
+      if (clearedMustChange) {
         await save(KEYS.users, initializedUsers);
       }
 
